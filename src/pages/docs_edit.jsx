@@ -1,160 +1,114 @@
-import { useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import Editor from '../components/Editor'
+import './docs_edit.css'
 
-const PANEL_HEIGHT = 520
-const previewBoxStyle = {
-	border: '1px solid #eee',
-	borderRadius: 6,
-	background: '#fafafa',
-	height: PANEL_HEIGHT,
-	overflowY: 'auto',
-	padding: 12,
-	boxSizing: 'border-box',
-}
-const editorWrapperStyle = {
-	height: PANEL_HEIGHT,
-	overflow: 'hidden',
-}
-
-const DEFAULT_CONTENT = `# 제목 1
-## 제목 2
-### 제목 3
-
-- 리스트 항목 1
-- 리스트 항목 2
-
-**굵은 텍스트**와 *기울임* 처리 예시
-
-[링크 텍스트](https://example.com)
-
-\`코드 인라인\` 및
-\`\`\`
-코드 블록 예시
-\`\`\`
-
-> 인용문
-`
-
-function renderPreviewMarkdown(rawText) {
-	const escapeHtml = (value) =>
-		value
-			.replaceAll('&', '&amp;')
-			.replaceAll('<', '&lt;')
-			.replaceAll('>', '&gt;')
-			.replaceAll('"', '&quot;')
-			.replaceAll("'", '&#39;')
-
-	const lines = rawText.split('\n')
-	let inList = false
-	const rendered = lines
-		.map((line) => {
-			if (!line.trim()) {
-				if (inList) {
-					inList = false
-					return '</ul>'
-				}
-				return ''
-			}
-
-			const listMatch = line.match(/^\s*[-+*]\s+(.*)$/)
-			if (listMatch) {
-				const text = escapeHtml(listMatch[1])
-				if (!inList) {
-					inList = true
-					return `<ul><li>${text}</li>`
-				}
-				return `<li>${text}</li>`
-			}
-
-			if (inList) {
-				inList = false
-				return `</ul>${renderLine(line)}`
-			}
-
-			return renderLine(line)
-		})
-		.join('')
-
-	if (inList) {
-		return `${rendered}</ul>`
-	}
-
-	return rendered
-
-	function renderLine(line) {
-		const headingMatch = line.match(/^(#{1,6})\s+(.*)$/)
-		if (headingMatch) {
-			const level = headingMatch[1].length
-			const text = escapeHtml(headingMatch[2])
-			return `<h${level}>${text}</h${level}>`
-		}
-		return `<p>${escapeHtml(line)}</p>`
-	}
+const STORAGE_KEY = 'docs_edit_content_json'
+const META_KEY = 'docs_edit_meta'
+const DEFAULT_CONTENT = {
+	type: 'doc',
+	content: [
+		{
+			type: 'heading',
+			attrs: { level: 1 },
+			content: [{ type: 'text', text: '제목 1' }],
+		},
+		{
+			type: 'heading',
+			attrs: { level: 2 },
+			content: [{ type: 'text', text: '제목 2' }],
+		},
+		{
+			type: 'heading',
+			attrs: { level: 3 },
+			content: [{ type: 'text', text: '제목 3' }],
+		},
+		{ type: 'paragraph' },
+		{
+			type: 'bulletList',
+			content: [
+				{
+					type: 'listItem',
+					content: [{ type: 'paragraph', content: [{ type: 'text', text: '리스트 항목 1' }] }],
+				},
+				{
+					type: 'listItem',
+					content: [{ type: 'paragraph', content: [{ type: 'text', text: '리스트 항목 2' }] }],
+				},
+			],
+		},
+		{
+			type: 'paragraph',
+			content: [
+				{ type: 'text', text: '굵은 텍스트', marks: [{ type: 'bold' }] },
+				{ type: 'text', text: '와 ' },
+				{ type: 'text', text: '기울임', marks: [{ type: 'italic' }] },
+				{ type: 'text', text: ' 처리 예시' },
+			],
+		},
+		{
+			type: 'paragraph',
+			content: [{ type: 'text', text: '코드 인라인 예시', marks: [{ type: 'code' }] }],
+		},
+		{
+			type: 'codeBlock',
+			content: [{ type: 'text', text: '코드 블록 예시' }],
+		},
+		{
+			type: 'blockquote',
+			content: [{ type: 'paragraph', content: [{ type: 'text', text: '인용문' }] }],
+		},
+	],
 }
 
 export default function DocsEdit() {
-	const [content, setContent] = useState(DEFAULT_CONTENT)
+	const [initialContent] = useState(() => {
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY)
+			if (stored) {
+				return JSON.parse(stored)
+			}
+		} catch (error) {
+			console.warn('Failed to load saved content JSON', error)
+		}
+		return DEFAULT_CONTENT
+	})
 	const [lastSavedAt, setLastSavedAt] = useState(null)
-	const previewHtml = useMemo(() => renderPreviewMarkdown(content), [content])
+	const currentJsonRef = useRef(initialContent)
 
 	const handleSave = () => {
-		localStorage.setItem('docs_edit_content', content)
-		setLastSavedAt(new Date())
+		const now = new Date()
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(currentJsonRef.current))
+		localStorage.setItem(META_KEY, JSON.stringify({ updatedAt: now.toISOString() }))
+		setLastSavedAt(now)
+	}
+
+	const handleEditorChange = (json) => {
+		currentJsonRef.current = json
 	}
 
 	return (
-		<div style={{ padding: 20, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-				<h1 style={{ margin: 0 }}>문서 편집</h1>
-				<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+		<div className="docs-edit">
+			<div className="docs-edit__header">
+				<h1 className="docs-edit__title">문서 편집</h1>
+				<div className="docs-edit__actions">
 					{lastSavedAt && (
-						<span style={{ fontSize: 12, color: '#666' }}>
+						<span className="docs-edit__saved-at">
 							마지막 저장: {lastSavedAt.toLocaleString('ko-KR')}
 						</span>
 					)}
 					<button
 						type="button"
 						onClick={handleSave}
-						style={{
-							padding: '8px 14px',
-							borderRadius: 6,
-							border: '1px solid #2f6fed',
-							background: '#2f6fed',
-							color: '#fff',
-							cursor: 'pointer',
-						}}
+						className="docs-edit__save-button"
 					>
 						문서 저장
 					</button>
 				</div>
 			</div>
-			<div
-				style={{
-					display: 'grid',
-					gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-					gap: 16,
-					alignItems: 'start',
-				}}
-			>
-				<div style={{ minWidth: 0 }}>
-					<h3 style={{ marginTop: 0 }}>에디터</h3>
-					<div style={editorWrapperStyle}>
-						<Editor initialContent={content} onChangeText={setContent} />
-					</div>
-				</div>
-				<div style={{ minWidth: 0 }}>
-					<h3 style={{ marginTop: 0 }}>프리뷰</h3>
-					<div style={previewBoxStyle}>
-						<div
-							style={{
-								color: '#1f2328',
-								overflowWrap: 'anywhere',
-								wordBreak: 'break-word',
-								textAlign: 'left',
-							}}
-							dangerouslySetInnerHTML={{ __html: previewHtml }}
-						/>
-					</div>
+			<div className="docs-edit__panel">
+				<h3 className="docs-edit__panel-title">에디터</h3>
+				<div className="docs-edit__editor-wrapper">
+					<Editor initialContent={initialContent} onChange={handleEditorChange} />
 				</div>
 			</div>
 		</div>
