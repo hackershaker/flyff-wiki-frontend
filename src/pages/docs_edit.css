@@ -1,0 +1,53 @@
+.docs-edit {
+  --panel-height: 520px;
+  padding: 20px;
+  width: 100%;
+}
+
+.docs-edit__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.docs-edit__title {
+  margin: 0;
+}
+
+.docs-edit__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.docs-edit__saved-at {
+  font-size: 12px;
+  color: #666;
+}
+
+.docs-edit__save-button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #2f6fed;
+  background: #2f6fed;
+  color: #fff;
+  cursor: pointer;
+}
+
+.docs-edit__panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.docs-edit__panel-title {
+  margin-top: 0;
+  flex: 0 0 auto;
+}
+
+.docs-edit__editor-wrapper {
+  height: var(--panel-height);
+  overflow: hidden;
+  flex: 0 0 var(--panel-height);
+}
