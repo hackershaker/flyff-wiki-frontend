@@ -11,25 +11,70 @@
   box-sizing: border-box;
 }
 
-.editor-root .editor-textarea {
-  width: 100%;
-  height: 100%;
+.editor-root .editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.editor-root .editor-toolbar button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  color: #1f2328;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.editor-root .editor-toolbar button.is-active {
+  border-color: #2f6fed;
+  color: #2f6fed;
+  background: #f3f7ff;
+}
+
+.editor-root .editor-toolbar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.editor-root .editor-toolbar__divider {
+  width: 1px;
+  height: 18px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+.editor-root .editor-content {
+  flex: 1;
   min-height: 200px;
-  padding: 0;
-  border: none;
-  resize: vertical;
-  background: transparent;
+  outline: none;
+}
+
+.editor-root .ProseMirror {
+  height: 100%;
+  outline: none;
   font: inherit;
-  line-height: 1.7;
+  font-synthesis: weight style;
+  line-height: 1.0;
   color: inherit;
-  outline: none;
-  box-sizing: border-box;
+  text-align: left;
 }
 
-.editor-root .editor-textarea:focus {
-  outline: none;
+.editor-root .ProseMirror em,
+.editor-root .ProseMirror i {
+  font-style: italic;
 }
 
-.editor-root :where(p) {
-  margin: 0 0 1em 0;
+.editor-root .ProseMirror>*:first-child {
+  margin-top: 0;
+}
+
+.editor-root .ProseMirror :where(p) {
+  margin: 0 0 0.35em 0;
 }
