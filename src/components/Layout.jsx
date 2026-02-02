@@ -9,13 +9,18 @@ export default function Layout({ children }) {
           <span className="app-header__title">Flyff Wiki</span>
         </a>
         <nav className="app-header__nav">
-          <a className="app-header__link" href="/">홈</a>
-          <a className="app-header__link" href="/edit">편집</a>
-          <a className="app-header__link" href="/view">보기</a>
+          <a className="app-header__link" href="/">
+            홈
+          </a>
+          <a className="app-header__link" href="/edit">
+            편집
+          </a>
+          <a className="app-header__link" href="/view">
+            보기
+          </a>
         </nav>
       </header>
       <main className="app-main">{children}</main>
     </div>
-    
   )
 }
