@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import Editor from '../components/Editor'
 import './docs_edit.css'
+import { saveDocument } from '../services/documentService.js'
 
 const STORAGE_KEY = 'docs_edit_content_json'
 const META_KEY = 'docs_edit_meta'
@@ -73,13 +74,33 @@ export default function DocsEdit() {
 		return DEFAULT_CONTENT
 	})
 	const [lastSavedAt, setLastSavedAt] = useState(null)
+	const [isSaving, setIsSaving] = useState(false)
+	const [statusMessage, setStatusMessage] = useState('')
 	const currentJsonRef = useRef(initialContent)
 
-	const handleSave = () => {
-		const now = new Date()
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(currentJsonRef.current))
-		localStorage.setItem(META_KEY, JSON.stringify({ updatedAt: now.toISOString() }))
-		setLastSavedAt(now)
+	const handleSave = async () => {
+		if (isSaving) {
+			return
+		}
+		setIsSaving(true)
+		setStatusMessage('')
+
+		try {
+			const payload = {
+				content: currentJsonRef.current,
+			}
+			const result = await saveDocument(payload)
+			const savedAt = result?.savedAt ? new Date(result.savedAt) : new Date()
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(currentJsonRef.current))
+			localStorage.setItem(META_KEY, JSON.stringify({ updatedAt: savedAt.toISOString() }))
+			setLastSavedAt(savedAt)
+			setStatusMessage('문서를 저장했습니다.')
+		} catch (error) {
+			console.error('문서 저장 실패', error)
+			setStatusMessage('문서 저장에 실패했습니다. 다시 시도해 주세요.')
+		} finally {
+			setIsSaving(false)
+		}
 	}
 
 	const handleEditorChange = (json) => {
@@ -100,10 +121,16 @@ export default function DocsEdit() {
 						type="button"
 						onClick={handleSave}
 						className="docs-edit__save-button"
+						disabled={isSaving}
 					>
-						문서 저장
+						{isSaving ? '저장 중…' : '문서 저장'}
 					</button>
 				</div>
+				{statusMessage && (
+					<p className="docs-edit__status" role="status">
+						{statusMessage}
+					</p>
+				)}
 			</div>
 			<div className="docs-edit__panel">
 				<h3 className="docs-edit__panel-title">에디터</h3>
