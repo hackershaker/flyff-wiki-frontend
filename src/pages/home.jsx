@@ -48,9 +48,30 @@ export default function Home() {
             <h1 className="home__title">문서 관리</h1>
             <p className="home__subtitle">저장된 문서 목록을 확인하고 새 문서를 작성하세요.</p>
           </div>
-          <a className="home__primary-button" href="/edit">
-            문서 작성
-          </a>
+          <div className="home__header-meta">
+            <div className="home__search">
+              <input
+                className="home__search-input"
+                type="text"
+                placeholder="문서 이름 또는 키워드로 검색"
+              />
+              <button className="home__search-button" type="button">
+                검색
+              </button>
+            </div>
+            <div className="home__user">
+              <span className="home__user-icon" aria-hidden="true">
+                👤
+              </span>
+              <div className="home__user-info">
+                <span className="home__user-name">게스트</span>
+                <span className="home__user-sub">로그인</span>
+              </div>
+            </div>
+            <a className="home__primary-button" href="/edit">
+              문서 작성
+            </a>
+          </div>
         </div>
 
         <div className="home__section">

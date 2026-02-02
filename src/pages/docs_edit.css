@@ -2,6 +2,10 @@
   --panel-height: 520px;
   padding: 20px;
   width: 100%;
+  min-height: 100vh;
+  padding: 36px 16px 48px;
+  background: #f6f7fa;
+  color: #111827;
 }
 
 .docs-edit__header {

@@ -23,6 +23,81 @@
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
+.home__header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.home__search {
+  display: flex;
+  align-items: center;
+  background: #f4f5f7;
+  border: 1px solid #e0e5ef;
+  border-radius: 999px;
+  padding: 6px;
+  gap: 4px;
+}
+
+.home__search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #1f2328;
+  min-width: 220px;
+}
+
+.home__search-button {
+  border: none;
+  background: #2f5bd8;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+}
+
+.home__user-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f2ff;
+  font-size: 16px;
+}
+
+.home__user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  font-size: 13px;
+}
+
+.home__user-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.home__user-sub {
+  color: #6b7280;
+}
+
 .home__eyebrow {
   font-size: 12px;
   font-weight: 600;
