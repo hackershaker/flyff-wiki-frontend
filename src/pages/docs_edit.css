@@ -26,6 +26,12 @@
   color: #666;
 }
 
+.docs-edit__status {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #1f5bd8;
+}
+
 .docs-edit__save-button {
   padding: 8px 14px;
   border-radius: 6px;
