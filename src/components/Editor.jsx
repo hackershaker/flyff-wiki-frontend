@@ -8,7 +8,26 @@ import { useEffect, useState } from 'react'
 import './Editor.css'
 import Toolbar from './Toolbar.jsx'
 
-export default function Editor({ initialContent, onChange }) {
+/**
+ * 위키 문서 편집기 컴포넌트.
+ *
+ * 사용 예:
+ * `<Editor textSize="16px" initialContent={content} onChange={setContent} />`
+ *
+ * @param {Object} props
+ * @param {import('@tiptap/react').JSONContent} [props.initialContent]
+ * 초기 콘텐츠(JSON).
+ * - 예: `{ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] }`
+ * @param {(value: import('@tiptap/react').JSONContent) => void} [props.onChange]
+ * 콘텐츠 변경 시 호출되는 콜백.
+ * - TipTap editor의 `getJSON()` 결과를 전달합니다.
+ * @param {string} [props.textSize='14px']
+ * 본문 글자 크기. CSS 길이 단위를 사용합니다.
+ * - 예: `12px`, `1rem`, `16px`
+ *
+ * @returns {JSX.Element}
+ */
+export default function Editor({ initialContent, onChange, textSize = '14px' }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -36,6 +55,7 @@ export default function Editor({ initialContent, onChange }) {
     isBold: false,
     isItalic: false,
     isStrike: false,
+    isCode: false,
     isHeading1: false,
     isHeading2: false,
     isHeading3: false,
@@ -61,6 +81,7 @@ export default function Editor({ initialContent, onChange }) {
         isBold: editor.isActive('bold'),
         isItalic: editor.isActive('italic'),
         isStrike: editor.isActive('strike'),
+        isCode: editor.isActive('code'),
         isHeading1: editor.isActive('heading', { level: 1 }),
         isHeading2: editor.isActive('heading', { level: 2 }),
         isHeading3: editor.isActive('heading', { level: 3 }),
@@ -104,7 +125,7 @@ export default function Editor({ initialContent, onChange }) {
   }, [editor, onChange])
 
   return (
-    <div className="editor-root">
+    <div className="editor-root" style={{ '--editor-font-size': textSize }}>
       <Toolbar editor={editor} editorState={activeFormats} />
       <EditorContent editor={editor} className="editor-content" />
     </div>

@@ -1,3 +1,7 @@
+/**
+ * 에디터 툴바에서 사용하는 아이콘/옵션 구성 모음.
+ * 각 옵션 배열은 Toolbar.jsx에서 그룹으로 렌더링됩니다.
+ */
 import {
   AlignLeft,
   AlignCenter,
@@ -20,12 +24,25 @@ import {
   TableRowsSplit,
   Image,
   Link,
+  Unlink,
+  Code2,
+  Minus,
+  CornerDownLeft,
 } from 'lucide-react'
 
 /**
+ * 에디터의 활성 상태 키 목록.
+ * Editor.jsx의 `activeFormats`와 1:1로 대응됩니다.
+ *
+ * 추가 방법:
+ * 1) Editor.jsx에서 editor.isActive(...)로 상태를 계산
+ * 2) 해당 키를 이 타입에 추가
+ * 3) 옵션 배열의 stateKey에 동일한 값을 지정
+ *
  * @typedef {'isHeading1' | 'isHeading2' | 'isHeading3' | 'isBold' | 'isItalic' | 'isStrike' |
- *   'isBulletList' | 'isOrderedList' | 'isBlockquote' | 'isCodeBlock' | 'isInTable' |
- *   'isAlignLeft' | 'isAlignCenter' | 'isAlignRight' | 'isAlignJustify' | 'isLink' | 'isImage'} ActiveStateKey
+ *   'isCode' | 'isBulletList' | 'isOrderedList' | 'isBlockquote' | 'isCodeBlock' | 'isInTable' |
+ *   'isAlignLeft' | 'isAlignCenter' | 'isAlignRight' | 'isAlignJustify' | 'isLink' | 'isImage' |
+ *   'isUndo' | 'isRedo' | 'isHorizontalRule' | 'isHardBreak'} ActiveStateKey
  */
 
 /**
@@ -33,6 +50,14 @@ import {
  */
 
 /**
+ * 툴바 버튼 하나를 구성하는 설정 객체.
+ *
+ * 필수 필드:
+ * - icon: 아이콘 키 (ICON_COMPONENTS의 키)
+ * - action: 클릭 시 실행되는 TipTap 명령
+ * - stateKey: 활성 상태 키 (Editor.jsx에서 계산되는 값)
+ * - text: 버튼 툴팁/aria-label 텍스트
+ *
  * @typedef {Object} ToolbarConfig
  * @property {keyof typeof icons} icon
  * @property {(editor: Editor) => void} action
@@ -40,6 +65,16 @@ import {
  * @property {string} text
  */
 
+/**
+ * 아이콘 키와 lucide-react 컴포넌트를 매핑합니다.
+ *
+ * 추가 방법:
+ * 1) lucide-react에서 아이콘 import
+ * 2) ICON_COMPONENTS에 키 등록
+ * 3) 옵션 배열에서 해당 키 사용
+ *
+ * @type {Record<string, import('react').ComponentType<{ className?: string }>>}
+ */
 const ICON_COMPONENTS = {
   bold: Bold,
   italic: Italic,
@@ -62,11 +97,27 @@ const ICON_COMPONENTS = {
   alignJustify: AlignJustify,
   image: Image,
   link: Link,
+  unlink: Unlink,
+  codeInline: Code2,
+  horizontalRule: Minus,
+  hardBreak: CornerDownLeft,
 }
 
+/**
+ * 아이콘 레지스트리.
+ * @type {typeof ICON_COMPONENTS}
+ */
 export const icons = ICON_COMPONENTS
 export { ICON_COMPONENTS }
 
+/**
+ * 제목(Heading) 관련 옵션.
+ *
+ * 예:
+ * { icon: 'heading2', action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(), stateKey: 'isHeading2', text: '제목2' }
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const headingOptions = [
   {
     icon: 'heading1',
@@ -88,6 +139,14 @@ export const headingOptions = [
   },
 ]
 
+/**
+ * 텍스트 마크(굵게/기울임 등) 옵션.
+ *
+ * 예:
+ * { icon: 'bold', action: (editor) => editor.chain().focus().toggleBold().run(), stateKey: 'isBold', text: '굵게' }
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const markOptions = [
   {
     icon: 'bold',
@@ -107,8 +166,23 @@ export const markOptions = [
     stateKey: 'isStrike',
     text: '취소선',
   },
+  {
+    icon: 'codeInline',
+    action: (editor) => editor.chain().focus().toggleCode().run(),
+    stateKey: 'isCode',
+    text: '인라인 코드',
+  },
 ]
 
+/**
+ * 표(Table) 관련 옵션.
+ *
+ * 주의:
+ * - 표 조작 명령은 selection이 table 안에 있을 때만 동작합니다.
+ * - stateKey는 공통으로 'isInTable'을 사용해 활성 표시를 맞춥니다.
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const tableOptions = [
   {
     icon: 'table',
@@ -126,19 +200,57 @@ export const tableOptions = [
     text: '표 삽입',
   },
   {
+    icon: 'tableRowsSplit',
+    action: (editor) => editor.chain().focus().addRowAfter().run(),
+    stateKey: 'isInTable',
+    text: '행 추가',
+  },
+  {
     icon: 'tableColumnsSplit',
     action: (editor) => editor.chain().focus().addColumnAfter().run(),
     stateKey: 'isInTable',
     text: '열 추가',
   },
   {
-    icon: 'tableRowsSplit',
-    action: (editor) => editor.chain().focus().addRowAfter().run(),
+    icon: 'tableColumnsSplit',
+    action: (editor) => editor.chain().focus().deleteColumn().run(),
     stateKey: 'isInTable',
-    text: '행 추가',
+    text: '열 삭제',
+  },
+  {
+    icon: 'tableRowsSplit',
+    action: (editor) => editor.chain().focus().deleteRow().run(),
+    stateKey: 'isInTable',
+    text: '행 삭제',
+  },
+  {
+    icon: 'table',
+    action: (editor) => editor.chain().focus().deleteTable().run(),
+    stateKey: 'isInTable',
+    text: '표 삭제',
+  },
+  {
+    icon: 'tableRowsSplit',
+    action: (editor) => editor.chain().focus().toggleHeaderRow().run(),
+    stateKey: 'isInTable',
+    text: '헤더 행',
+  },
+  {
+    icon: 'tableColumnsSplit',
+    action: (editor) => editor.chain().focus().toggleHeaderColumn().run(),
+    stateKey: 'isInTable',
+    text: '헤더 열',
   },
 ]
 
+/**
+ * 블록 수준 옵션(목록/인용/코드블록 등).
+ *
+ * 예:
+ * { icon: 'blockquote', action: (editor) => editor.chain().focus().toggleBlockquote().run(), stateKey: 'isBlockquote', text: '인용' }
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const blockOptions = [
   {
     icon: 'bulletList',
@@ -158,8 +270,34 @@ export const blockOptions = [
     stateKey: 'isBlockquote',
     text: '인용',
   },
+  {
+    icon: 'codeBlock',
+    action: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+    stateKey: 'isCodeBlock',
+    text: '코드 블록',
+  },
+  {
+    icon: 'horizontalRule',
+    action: (editor) => editor.chain().focus().setHorizontalRule().run(),
+    stateKey: 'isHorizontalRule',
+    text: '구분선',
+  },
+  {
+    icon: 'hardBreak',
+    action: (editor) => editor.chain().focus().setHardBreak().run(),
+    stateKey: 'isHardBreak',
+    text: '줄바꿈',
+  },
 ]
 
+/**
+ * 정렬(TextAlign) 옵션.
+ *
+ * 주의:
+ * - TextAlign extension의 types 설정을 Editor.jsx에서 관리합니다.
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const alignmentOptions = [
   {
     icon: 'alignLeft',
@@ -187,6 +325,14 @@ export const alignmentOptions = [
   },
 ]
 
+/**
+ * 미디어/링크 관련 옵션.
+ *
+ * 참고:
+ * - URL 입력은 window.prompt를 사용 중입니다. 필요시 별도 모달로 대체하세요.
+ *
+ * @type {ToolbarConfig[]}
+ */
 export const mediaOptions = [
   {
     icon: 'image',
@@ -212,6 +358,36 @@ export const mediaOptions = [
     stateKey: 'isLink',
     text: '하이퍼링크',
   },
+  {
+    icon: 'unlink',
+    action: (editor) => editor.chain().focus().unsetLink().run(),
+    stateKey: 'isLink',
+    text: '링크 해제',
+  },
 ]
 
 // 추가 옵션은 여기서 그룹화하고 export 하여 에디터 툴바에 재사용하세요.
+// 예: export const customOptions = [ { icon, action, stateKey, text } ]
+
+/**
+ * 편집 히스토리(Undo/Redo) 옵션.
+ *
+ * 참고:
+ * - StarterKit에 history가 포함되어 있어야 동작합니다.
+ *
+ * @type {ToolbarConfig[]}
+ */
+export const historyOptions = [
+  {
+    icon: 'undo',
+    action: (editor) => editor.chain().focus().undo().run(),
+    stateKey: 'isUndo',
+    text: '되돌리기',
+  },
+  {
+    icon: 'redo',
+    action: (editor) => editor.chain().focus().redo().run(),
+    stateKey: 'isRedo',
+    text: '다시 실행',
+  },
+]

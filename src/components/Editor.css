@@ -90,18 +90,30 @@
 
 .editor-root .editor-content {
   flex: 1;
-  min-height: 200px;
+  min-height: 600px;
+  max-height: 600px;
   outline: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0;
+  background: #fff;
+  overflow: auto;
+  cursor: text;
+  margin-top: 8px;
 }
 
 .editor-root .ProseMirror {
   height: 100%;
+  min-height: 100%;
   outline: none;
   font: inherit;
+  font-size: var(--editor-font-size, 14px);
   font-synthesis: weight style;
   line-height: 1.0;
   color: inherit;
   text-align: left;
+  padding: 12px 14px;
+  box-sizing: border-box;
 }
 
 .editor-root .ProseMirror em,
