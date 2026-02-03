@@ -24,6 +24,7 @@ export default function ToolbarButton({
     shape = 'pill',
     children,
     buttonSize = 'md',
+    tooltip,
     ...props
 }) {
     const resolvedSize = size ?? buttonSize
@@ -52,8 +53,15 @@ export default function ToolbarButton({
         <BadgeAlert className={iconClassName} aria-hidden="true" />
     )
 
+    const tooltipProps = tooltip ? { 'data-tooltip': tooltip } : {}
+
     return (
-        <button type="button" className={buttonClassName} {...props}>
+        <button
+            type="button"
+            className={buttonClassName}
+            {...tooltipProps}
+            {...props}
+        >
             {content}
         </button>
     )

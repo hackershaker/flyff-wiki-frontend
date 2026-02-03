@@ -56,6 +56,32 @@
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.15);
 }
 
+.toolbar-button[data-tooltip] {
+  position: relative;
+}
+
+.toolbar-button[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.toolbar-button[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
 .toolbar-button__icon {
   display: block;
 }

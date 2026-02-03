@@ -1,12 +1,31 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import TextAlign from '@tiptap/extension-text-align'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import { useEffect, useState } from 'react'
 import './Editor.css'
 import Toolbar from './Toolbar.jsx'
 
 export default function Editor({ initialContent, onChange }) {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Link.configure({
+        autolink: true,
+        linkOnPaste: true,
+      }),
+      Image,
+      Table.configure({
+        resizable: true,
+        allowTableNodeSelection: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content: initialContent,
     onUpdate: ({ editor }) => {
       onChange?.(editor.getJSON())
@@ -24,6 +43,13 @@ export default function Editor({ initialContent, onChange }) {
     isOrderedList: false,
     isBlockquote: false,
     isCodeBlock: false,
+    isAlignLeft: false,
+    isAlignCenter: false,
+    isAlignRight: false,
+    isAlignJustify: false,
+    isLink: false,
+    isImage: false,
+    isInTable: false,
   })
 
   useEffect(() => {
@@ -42,6 +68,13 @@ export default function Editor({ initialContent, onChange }) {
         isOrderedList: editor.isActive('orderedList'),
         isBlockquote: editor.isActive('blockquote'),
         isCodeBlock: editor.isActive('codeBlock'),
+        isAlignLeft: editor.isActive({ textAlign: 'left' }),
+        isAlignCenter: editor.isActive({ textAlign: 'center' }),
+        isAlignRight: editor.isActive({ textAlign: 'right' }),
+        isAlignJustify: editor.isActive({ textAlign: 'justify' }),
+        isLink: editor.isActive('link'),
+        isImage: editor.isActive('image'),
+        isInTable: editor.isActive('table'),
       })
     }
 

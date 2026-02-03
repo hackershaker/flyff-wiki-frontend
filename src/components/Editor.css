@@ -136,3 +136,69 @@
 .editor-root .ProseMirror :where(p) {
   margin: 0 0 0.35em 0;
 }
+
+.editor-root .ProseMirror {
+  --default-cell-min-width: 80px;
+}
+
+.editor-root .ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+
+.editor-root .ProseMirror td,
+.editor-root .ProseMirror th {
+  position: relative;
+}
+
+.editor-root .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.55);
+  cursor: col-resize;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.editor-root .ProseMirror td:hover .column-resize-handle,
+.editor-root .ProseMirror th:hover .column-resize-handle {
+  opacity: 1;
+}
+
+.editor-root .ProseMirror td,
+.editor-root .ProseMirror th {
+  cursor: col-resize;
+}
+
+.editor-root .ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
+.editor-root .ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+  min-width: var(--default-cell-min-width);
+}
+
+.editor-root .ProseMirror .resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+
+.editor-root .ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1rem;
+  border: 1px solid #d1d5db;
+}
+
+.editor-root .ProseMirror th,
+.editor-root .ProseMirror td {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+
+.editor-root .ProseMirror th {
+  background: #f3f4f6;
+  font-weight: 600;
+}

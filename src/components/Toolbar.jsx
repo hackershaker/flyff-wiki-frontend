@@ -1,7 +1,16 @@
 import ToolbarButton from './ToolbarButton.jsx'
 import ToolbarGroup from './ToolbarGroup.jsx'
 import ToolbarLine from './ToolbarLine.jsx'
-import { headingOptions, markOptions } from '../config/toolbarConfig.js'
+import {
+    headingOptions,
+    markOptions,
+    tableOptions,
+    alignmentOptions,
+    mediaOptions,
+    blockOptions,
+} from '../config/toolbarConfig.js'
+
+const utilityOptions = [...alignmentOptions, ...mediaOptions, ...blockOptions]
 
 export default function Toolbar({ editor, editorState }) {
   if (!editor) {
@@ -17,6 +26,7 @@ export default function Toolbar({ editor, editorState }) {
             iconType="node"
             active={Boolean(editorState?.[stateKey])}
             aria-label={text}
+            tooltip={text}
             onClick={() => action(editor)}
           />
         ))}
@@ -30,12 +40,40 @@ export default function Toolbar({ editor, editorState }) {
             iconType="marks"
             active={Boolean(editorState?.[stateKey])}
             aria-label={text}
+            tooltip={text}
             onClick={() => action(editor)}
           />
         ))}
       </ToolbarGroup>
       <ToolbarLine />
-      {/** TODO: add other option groups here using the same pattern */}
+      <ToolbarGroup>
+        {tableOptions.map(({ icon, action, stateKey, text }) => (
+          <ToolbarButton
+            key={stateKey + icon}
+            icon={icon}
+            iconType="node"
+            active={Boolean(editorState?.[stateKey])}
+            aria-label={text}
+            tooltip={text}
+            onClick={() => action(editor)}
+          />
+        ))}
+      </ToolbarGroup>
+      <ToolbarLine />
+      <ToolbarGroup>
+        {utilityOptions.map(({ icon, action, stateKey, text }) => (
+          <ToolbarButton
+            key={`${stateKey}-${icon}`}
+            icon={icon}
+            iconType="node"
+            active={Boolean(editorState?.[stateKey])}
+            aria-label={text}
+            tooltip={text}
+            onClick={() => action(editor)}
+          />
+        ))}
+      </ToolbarGroup>
+      <ToolbarLine />
     </section>
   )
 }

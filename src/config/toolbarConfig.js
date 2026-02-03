@@ -1,4 +1,8 @@
 import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
   Bold,
   Italic,
   Strikethrough,
@@ -11,11 +15,17 @@ import {
   Code,
   RotateCcw,
   RotateCw,
+  Table,
+  TableColumnsSplit,
+  TableRowsSplit,
+  Image,
+  Link,
 } from 'lucide-react'
 
 /**
  * @typedef {'isHeading1' | 'isHeading2' | 'isHeading3' | 'isBold' | 'isItalic' | 'isStrike' |
- *   'isBulletList' | 'isOrderedList' | 'isBlockquote' | 'isCodeBlock'} ActiveStateKey
+ *   'isBulletList' | 'isOrderedList' | 'isBlockquote' | 'isCodeBlock' | 'isInTable' |
+ *   'isAlignLeft' | 'isAlignCenter' | 'isAlignRight' | 'isAlignJustify' | 'isLink' | 'isImage'} ActiveStateKey
  */
 
 /**
@@ -43,6 +53,15 @@ const ICON_COMPONENTS = {
   codeBlock: Code,
   undo: RotateCcw,
   redo: RotateCw,
+  table: Table,
+  tableRowsSplit: TableRowsSplit,
+  tableColumnsSplit: TableColumnsSplit,
+  alignLeft: AlignLeft,
+  alignCenter: AlignCenter,
+  alignRight: AlignRight,
+  alignJustify: AlignJustify,
+  image: Image,
+  link: Link,
 }
 
 export const icons = ICON_COMPONENTS
@@ -87,6 +106,111 @@ export const markOptions = [
     action: (editor) => editor.chain().focus().toggleStrike().run(),
     stateKey: 'isStrike',
     text: '취소선',
+  },
+]
+
+export const tableOptions = [
+  {
+    icon: 'table',
+    action: (editor) =>
+      editor
+        .chain()
+        .focus()
+        .insertTable({
+          rows: 3,
+          cols: 3,
+          withHeaderRow: true,
+        })
+        .run(),
+    stateKey: 'isInTable',
+    text: '표 삽입',
+  },
+  {
+    icon: 'tableColumnsSplit',
+    action: (editor) => editor.chain().focus().addColumnAfter().run(),
+    stateKey: 'isInTable',
+    text: '열 추가',
+  },
+  {
+    icon: 'tableRowsSplit',
+    action: (editor) => editor.chain().focus().addRowAfter().run(),
+    stateKey: 'isInTable',
+    text: '행 추가',
+  },
+]
+
+export const blockOptions = [
+  {
+    icon: 'bulletList',
+    action: (editor) => editor.chain().focus().toggleBulletList().run(),
+    stateKey: 'isBulletList',
+    text: '글머리표',
+  },
+  {
+    icon: 'orderedList',
+    action: (editor) => editor.chain().focus().toggleOrderedList().run(),
+    stateKey: 'isOrderedList',
+    text: '번호',
+  },
+  {
+    icon: 'blockquote',
+    action: (editor) => editor.chain().focus().toggleBlockquote().run(),
+    stateKey: 'isBlockquote',
+    text: '인용',
+  },
+]
+
+export const alignmentOptions = [
+  {
+    icon: 'alignLeft',
+    action: (editor) => editor.chain().focus().setTextAlign('left').run(),
+    stateKey: 'isAlignLeft',
+    text: '왼쪽 정렬',
+  },
+  {
+    icon: 'alignCenter',
+    action: (editor) => editor.chain().focus().setTextAlign('center').run(),
+    stateKey: 'isAlignCenter',
+    text: '가운데 정렬',
+  },
+  {
+    icon: 'alignRight',
+    action: (editor) => editor.chain().focus().setTextAlign('right').run(),
+    stateKey: 'isAlignRight',
+    text: '오른쪽 정렬',
+  },
+  {
+    icon: 'alignJustify',
+    action: (editor) => editor.chain().focus().setTextAlign('justify').run(),
+    stateKey: 'isAlignJustify',
+    text: '양쪽 정렬',
+  },
+]
+
+export const mediaOptions = [
+  {
+    icon: 'image',
+    action: (editor) => {
+      const src = window.prompt('표시할 이미지 URL을 입력하세요')
+      if (!src) {
+        return
+      }
+      editor.chain().focus().setImage({ src }).run()
+    },
+    stateKey: 'isImage',
+    text: '이미지 삽입',
+  },
+  {
+    icon: 'link',
+    action: (editor) => {
+      const href = window.prompt('연결할 URL을 입력하세요')
+      if (!href) {
+        return
+      }
+      editor.chain().focus().setLink({ href }).run()
+    },
+    stateKey: 'isLink',
+    text: '하이퍼링크',
   },
 ]
 
