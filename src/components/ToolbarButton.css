@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
+  border-radius: 0;
   border: 1px solid #d0d7de;
   background: #ffffff;
   color: #111827;
@@ -11,19 +11,40 @@
   padding: 0;
 }
 
-.toolbar-button--sm {
+.toolbar-button--size-sm {
   width: 30px;
   height: 30px;
 }
 
-.toolbar-button--md {
+.toolbar-button--size-md {
   width: 35px;
   height: 35px;
 }
 
-.toolbar-button--lg {
+.toolbar-button--size-lg {
   width: 40px;
   height: 40px;
+}
+
+.toolbar-button--size-xl {
+  width: 46px;
+  height: 46px;
+}
+
+.toolbar-button--shape-pill {
+  border-radius: 9999px;
+}
+
+.toolbar-button--shape-rounded {
+  border-radius: 8px;
+}
+
+.toolbar-button--shape-square {
+  border-radius: 2px;
+}
+
+.toolbar-button--shape-circle {
+  border-radius: 50%;
 }
 
 .toolbar-button:hover {

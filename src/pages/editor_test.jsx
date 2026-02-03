@@ -1,15 +1,81 @@
-﻿import { Camera } from "lucide-react";
-import ToolbarButton from "../components/ToolbarButton";
+import Editor from '../components/Editor.jsx'
+import ToolbarButton from '../components/ToolbarButton.jsx'
+import ToolbarGroup from '../components/ToolbarGroup.jsx'
+import ToolbarLine from '../components/ToolbarLine.jsx'
+import { headingOptions, markOptions } from '../config/toolbarConfig.js'
+
+const demoHeadingOptions = headingOptions.slice(0, 3)
 
 export default function EditorTestPage() {
   return (
-    <div>
-      <br />
-      <br />
-      <br />
-      <br />
-      <Camera color="red" size={48} />
-      <ToolbarButton icon='bold' />
-    </div>
-  );
+    <main
+      style={{
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '32px',
+      }}
+    >
+      <section
+        style={{
+          padding: '16px',
+          borderRadius: '10px',
+          border: '1px solid #e5e5e5',
+          background: '#fafafa',
+        }}
+      >
+        <h2 style={{ marginBottom: '8px' }}>ToolbarButton 단독 확인</h2>
+        <ToolbarGroup>
+          <ToolbarButton icon="bold" iconType="marks" shape="pill" active buttonSize="md" />
+          <ToolbarButton icon="italic" iconType="marks" shape="round" buttonSize="lg" />
+          <ToolbarButton icon="strike" iconType="marks" shape="square" buttonSize="sm" />
+          <ToolbarButton icon="heading1" iconType="node" shape="circle" buttonSize="xl" />
+        </ToolbarGroup>
+      </section>
+      <section
+        style={{
+          padding: '16px',
+          borderRadius: '10px',
+          border: '1px dashed #d1d5db',
+        }}
+      >
+        <h2 style={{ marginBottom: '8px' }}>ToolbarGroup · ToolbarLine 미리보기</h2>
+        <ToolbarGroup>
+          {demoHeadingOptions.map((option) => (
+            <ToolbarButton
+              key={option.stateKey}
+              icon={option.icon}
+              iconType="node"
+              active
+              aria-label={option.text}
+              onClick={() => console.log(`clicked ${option.text}`)}
+            />
+          ))}
+        </ToolbarGroup>
+        <ToolbarLine />
+        <ToolbarGroup>
+          {markOptions.map((option) => (
+            <ToolbarButton
+              key={option.stateKey}
+              icon={option.icon}
+              iconType="marks"
+              aria-label={option.text}
+              onClick={() => console.log(`clicked ${option.text}`)}
+            />
+          ))}
+        </ToolbarGroup>
+      </section>
+      <section
+        style={{
+          padding: '16px',
+          borderRadius: '10px',
+          border: '1px solid #d1d5db',
+          background: '#fff',
+        }}
+      >
+        <h2 style={{ marginBottom: '16px' }}>Toolbar + Editor 통합</h2>
+        <Editor />
+      </section>
+    </main>
+  )
 }
