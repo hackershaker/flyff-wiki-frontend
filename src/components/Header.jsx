@@ -1,12 +1,13 @@
+import { Link } from 'react-router-dom'
 import './Header.css'
 
 export default function Header() {
   return (
     <header className="app-header">
-      <a className="app-header__brand" href="/">
+      <Link className="app-header__brand" to="/">
         <span className="app-header__logo">F</span>
         <span className="app-header__title">Flyff Wiki</span>
-      </a>
+      </Link>
       <div className="app-header__spacer" />
       <div className="app-header__search">
         <input

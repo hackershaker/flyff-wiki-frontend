@@ -1,8 +1,7 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import './home.css'
-
-const STORAGE_KEY = 'docs_edit_content_json'
-const META_KEY = 'docs_edit_meta'
+import { getDocuments } from '../services/documentService.js'
 
 function extractTitle(doc) {
   if (!doc || !Array.isArray(doc.content)) {
@@ -17,27 +16,52 @@ function extractTitle(doc) {
 }
 
 export default function Home() {
-  const { hasDoc, title, updatedAt } = useMemo(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (!stored) {
-        return { hasDoc: false }
-      }
-      const doc = JSON.parse(stored)
-      const metaRaw = localStorage.getItem(META_KEY)
-      const meta = metaRaw ? JSON.parse(metaRaw) : null
-      const updated = meta?.updatedAt ? new Date(meta.updatedAt) : null
+  const [documents, setDocuments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
 
-      return {
-        hasDoc: true,
-        title: extractTitle(doc),
-        updatedAt: updated,
+  useEffect(() => {
+    let isMounted = true
+
+    const loadDocuments = async () => {
+      try {
+        const list = await getDocuments()
+        if (isMounted) {
+          setDocuments(Array.isArray(list) ? list : [])
+          setErrorMessage('')
+        }
+      } catch (error) {
+        console.error('Failed to load documents', error)
+        if (isMounted) {
+          setErrorMessage('문서 목록을 불러오지 못했습니다.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
-    } catch (error) {
-      console.warn('Failed to load saved docs', error)
-      return { hasDoc: false }
+    }
+
+    loadDocuments()
+
+    return () => {
+      isMounted = false
     }
   }, [])
+
+  const viewModels = useMemo(() => {
+    return documents.map((doc, index) => {
+      const title = extractTitle(doc?.content ?? doc)
+      const savedAt = doc?.savedAt ? new Date(doc.savedAt) : null
+      return {
+        id: doc?.id ?? doc?.savedAt ?? `doc-${index}`,
+        title,
+        savedAt,
+      }
+    })
+  }, [documents])
+
+  const hasDoc = viewModels.length > 0
 
   return (
     <div className="home">
@@ -48,37 +72,50 @@ export default function Home() {
             <h1 className="home__title">문서 관리</h1>
             <p className="home__subtitle">저장된 문서 목록을 확인하고 새 문서를 작성하세요.</p>
           </div>
-          <a className="home__primary-button" href="/edit">
+          <Link className="home__primary-button" to="/edit">
             문서 작성
-          </a>
+          </Link>
         </div>
 
         <div className="home__section">
           <div className="home__section-header">
             <h2 className="home__section-title">현재 저장된 문서</h2>
+            <span className="home__section-count">
+              총 {isLoading ? 0 : viewModels.length}개
+            </span>
           </div>
 
-          {!hasDoc && <div className="home__empty">저장된 문서가 없습니다.</div>}
+          {isLoading && <div className="home__empty">문서 목록을 불러오는 중입니다.</div>}
 
-          {hasDoc && (
+          {!isLoading && errorMessage && (
+            <div className="home__empty">{errorMessage}</div>
+          )}
+
+          {!isLoading && !errorMessage && !hasDoc && (
+            <div className="home__empty">저장된 문서가 없습니다.</div>
+          )}
+
+          {!isLoading && !errorMessage && hasDoc && (
             <div className="home__list">
-              <div className="home__card">
-                <div className="home__card-main">
-                  <div className="home__card-title">{title}</div>
-                  <div className="home__card-meta">
-                    마지막 저장:{' '}
-                    {updatedAt ? updatedAt.toLocaleString('ko-KR') : '기록 없음'}
+              {viewModels.map((doc) => (
+                <div className="home__card" key={doc.id}>
+                  <div className="home__card-main">
+                    <div className="home__card-title">{doc.title}</div>
+                    <div className="home__card-meta">
+                      마지막 저장:{' '}
+                      {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
+                    </div>
+                  </div>
+                  <div className="home__card-actions">
+                    <Link className="home__link" to="/view">
+                      보기
+                    </Link>
+                    <Link className="home__link" to="/edit">
+                      편집
+                    </Link>
                   </div>
                 </div>
-                <div className="home__card-actions">
-                  <a className="home__link" href="/view">
-                    보기
-                  </a>
-                  <a className="home__link" href="/edit">
-                    편집
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>

@@ -5,23 +5,20 @@ import Home from './pages/home.jsx'
 import EditorTestPage from './pages/editor_test.jsx'
 
 import Header from './components/Header.jsx'
+import { Route, Routes } from 'react-router-dom'
 
 function App() {
-  const pathname = window.location.pathname
-  let content = <Home />
-
-  if (pathname === '/edit') {
-    content = <DocsEdit />
-  } else if (pathname === '/view') {
-    content = <DocsView />
-  } else if (pathname === '/editor-test') {
-    content = <EditorTestPage />
-  }
-
-  return <div>
-    <Header />
-    {content}
-  </div>
+  return (
+    <div>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/edit" element={<DocsEdit />} />
+        <Route path="/view" element={<DocsView />} />
+        <Route path="/editor-test" element={<EditorTestPage />} />
+      </Routes>
+    </div>
+  )
 }
 
 export default App
