@@ -1,16 +1,18 @@
+/* Global header styles that align with the shared design tokens. */
 .app-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .app-header__brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   text-decoration: none;
   color: inherit;
 }
@@ -22,8 +24,8 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #2f5bd8;
-  color: #fff;
+  background: var(--color-accent-strong);
+  color: var(--color-accent-contrast);
   font-weight: 700;
   font-size: 18px;
 }
@@ -37,14 +39,15 @@
   flex: 1;
 }
 
+/* Search pill uses surface-alt to visually separate from the background. */
 .app-header__search {
   display: inline-flex;
   align-items: center;
-  background: #f4f5f7;
-  border: 1px solid #d5dae5;
-  border-radius: 999px;
-  padding: 6px;
-  gap: 6px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2);
+  gap: var(--space-2);
 }
 
 .app-header__search-input {
@@ -52,28 +55,45 @@
   background: transparent;
   outline: none;
   padding: 4px 8px;
-  min-width: 150px;
+  min-width: 160px;
+  color: inherit;
 }
 
 .app-header__search-button {
   border: none;
-  background: #2f5bd8;
-  color: #fff;
-  border-radius: 999px;
+  background: var(--color-accent-strong);
+  color: var(--color-accent-contrast);
+  border-radius: var(--radius-pill);
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
+.app-header__theme-toggle {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: inherit;
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.app-header__theme-toggle:hover {
+  background: var(--color-surface-alt);
+}
+
 .app-header__user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   padding: 6px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 999px;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
 }
 
 .app-header__user-icon {
@@ -83,7 +103,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f0f2ff;
+  background: var(--color-surface-alt);
 }
 
 .app-header__user-info {
@@ -98,5 +118,16 @@
 }
 
 .app-header__user-sub {
-  color: #6b7280;
+  color: var(--color-muted);
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .app-header__search {
+    flex: 1 1 100%;
+  }
 }
