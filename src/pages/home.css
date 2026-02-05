@@ -49,39 +49,8 @@
 
 .home__hero-actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: stretch;
-  min-width: 280px;
-}
-
-.home__search {
-  display: inline-flex;
   align-items: center;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: 6px;
-  gap: 6px;
-}
-
-.home__search-input {
-  border: none;
-  background: transparent;
-  outline: none;
-  padding: 6px 10px;
-  flex: 1;
-}
-
-.home__search-button {
-  border: none;
-  background: var(--color-accent-strong);
-  color: var(--color-accent-contrast);
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+  min-width: 200px;
 }
 
 .home__primary-button {
@@ -185,6 +154,19 @@
   font-weight: 600;
   font-size: 16px;
   margin-bottom: 4px;
+}
+
+.home__card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  margin-bottom: 6px;
 }
 
 .home__card-meta {

@@ -1,10 +1,18 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Editor from '../components/Editor'
 import './docs_edit.css'
 import { saveDocument } from '../services/documentService.js'
 
 const STORAGE_KEY = 'docs_edit_content_json'
 const META_KEY = 'docs_edit_meta'
+const CATEGORY_OPTIONS = [
+	{ value: 'jobs', label: '직업' },
+	{ value: 'items', label: '아이템' },
+	{ value: 'monsters', label: '몬스터' },
+	{ value: 'quests', label: '퀘스트' },
+	{ value: 'maps', label: '지역' },
+	{ value: 'systems', label: '시스템' },
+]
 const DEFAULT_CONTENT = {
 	type: 'doc',
 	content: [
@@ -62,6 +70,28 @@ const DEFAULT_CONTENT = {
 }
 
 export default function DocsEdit() {
+	// Extract an initial title from the stored content (first H1) or fall back.
+	const initialTitle = useMemo(() => {
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY)
+			if (!stored) {
+				return '제목 1'
+			}
+			const doc = JSON.parse(stored)
+			if (!doc || !Array.isArray(doc.content)) {
+				return '제목 1'
+			}
+			const headingNode = doc.content.find(
+				(node) => node.type === 'heading' && node.attrs?.level === 1
+			)
+			const titleText = headingNode?.content?.map((node) => node.text).join('').trim()
+			return titleText || '제목 1'
+		} catch (error) {
+			console.warn('Failed to parse title from stored content', error)
+			return '제목 1'
+		}
+	}, [])
+
 	const [initialContent] = useState(() => {
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY)
@@ -73,10 +103,70 @@ export default function DocsEdit() {
 		}
 		return DEFAULT_CONTENT
 	})
+	const [title, setTitle] = useState(initialTitle)
+	const [category, setCategory] = useState(() => {
+		try {
+			const metaRaw = localStorage.getItem(META_KEY)
+			if (!metaRaw) {
+				return CATEGORY_OPTIONS[0]?.value ?? 'jobs'
+			}
+			const meta = JSON.parse(metaRaw)
+			return meta?.category ?? CATEGORY_OPTIONS[0]?.value ?? 'jobs'
+		} catch (error) {
+			console.warn('Failed to parse stored category', error)
+			return CATEGORY_OPTIONS[0]?.value ?? 'jobs'
+		}
+	})
 	const [lastSavedAt, setLastSavedAt] = useState(null)
 	const [isSaving, setIsSaving] = useState(false)
 	const [statusMessage, setStatusMessage] = useState('')
 	const currentJsonRef = useRef(initialContent)
+
+	/**
+	 * Build a new JSON document that includes the current title as the first H1.
+	 *
+	 * - If an H1 exists, it will be replaced with the new title.
+	 * - If none exists, the H1 will be inserted at the top.
+	 *
+	 * @param {import('@tiptap/react').JSONContent} doc
+	 * The current editor document JSON.
+	 * @param {string} nextTitle
+	 * The title text to apply to the document.
+	 * @returns {import('@tiptap/react').JSONContent}
+	 * The updated document JSON including the title heading.
+	 */
+	const applyTitleToDocument = (doc, nextTitle) => {
+		const safeTitle = (nextTitle || '').trim() || '제목 1'
+		const headingNode = {
+			type: 'heading',
+			attrs: { level: 1 },
+			content: [{ type: 'text', text: safeTitle }],
+		}
+
+		if (!doc || !Array.isArray(doc.content)) {
+			return { type: 'doc', content: [headingNode] }
+		}
+
+		const headingIndex = doc.content.findIndex(
+			(node) => node.type === 'heading' && node.attrs?.level === 1
+		)
+
+		if (headingIndex === -1) {
+			return {
+				...doc,
+				content: [headingNode, ...doc.content],
+			}
+		}
+
+		return {
+			...doc,
+			content: [
+				...doc.content.slice(0, headingIndex),
+				headingNode,
+				...doc.content.slice(headingIndex + 1),
+			],
+		}
+	}
 
 	const handleSave = async () => {
 		if (isSaving) {
@@ -86,13 +176,21 @@ export default function DocsEdit() {
 		setStatusMessage('')
 
 		try {
+			const contentWithTitle = applyTitleToDocument(currentJsonRef.current, title)
 			const payload = {
-				content: currentJsonRef.current,
+				// Send the explicit title field to the backend for list views and indexing.
+				title: title?.trim() || '제목 1',
+				// Send the selected category for filtering and list views.
+				category,
+				content: contentWithTitle,
 			}
 			const result = await saveDocument(payload)
 			const savedAt = result?.savedAt ? new Date(result.savedAt) : new Date()
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(currentJsonRef.current))
-			localStorage.setItem(META_KEY, JSON.stringify({ updatedAt: savedAt.toISOString() }))
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(contentWithTitle))
+			localStorage.setItem(
+				META_KEY,
+				JSON.stringify({ updatedAt: savedAt.toISOString(), category })
+			)
 			setLastSavedAt(savedAt)
 			setStatusMessage('문서를 저장했습니다.')
 		} catch (error) {
@@ -110,7 +208,35 @@ export default function DocsEdit() {
 	return (
 		<div className="docs-edit">
 			<div className="docs-edit__header">
-				<h1 className="docs-edit__title">문서 편집</h1>
+				<div className="docs-edit__title-group">
+					<h1 className="docs-edit__title">문서 편집</h1>
+					<label className="docs-edit__title-label" htmlFor="doc-title-input">
+						문서 제목
+					</label>
+					<input
+						id="doc-title-input"
+						className="docs-edit__title-input"
+						type="text"
+						value={title}
+						placeholder="문서 제목을 입력하세요"
+						onChange={(event) => setTitle(event.target.value)}
+					/>
+					<label className="docs-edit__title-label" htmlFor="doc-category-select">
+						문서 카테고리
+					</label>
+					<select
+						id="doc-category-select"
+						className="docs-edit__category-select"
+						value={category}
+						onChange={(event) => setCategory(event.target.value)}
+					>
+						{CATEGORY_OPTIONS.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
 				<div className="docs-edit__actions">
 					{lastSavedAt && (
 						<span className="docs-edit__saved-at">

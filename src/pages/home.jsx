@@ -74,11 +74,14 @@ export default function Home() {
   // Convert raw API documents into view models used by the UI sections.
   const viewModels = useMemo(() => {
     return documents.map((doc, index) => {
-      const title = extractTitle(doc?.content ?? doc)
+      // Prefer explicit title from the backend, fall back to extracting from JSON.
+      const title = doc?.title?.trim() || extractTitle(doc?.content ?? doc)
+      const category = doc?.category ?? '미분류'
       const savedAt = doc?.savedAt ? new Date(doc.savedAt) : null
       return {
         id: doc?.id ?? doc?.savedAt ?? `doc-${index}`,
         title,
+        category,
         savedAt,
       }
     })
@@ -102,23 +105,6 @@ export default function Home() {
             </p>
           </div>
           <div className="home__hero-actions">
-            <form
-              className="home__search"
-              onSubmit={(event) => {
-                // Prevent navigation while the search feature is still a UI placeholder.
-                event.preventDefault()
-              }}
-            >
-              <input
-                className="home__search-input"
-                type="search"
-                placeholder="문서를 검색하세요"
-                aria-label="문서 검색"
-              />
-              <button type="submit" className="home__search-button">
-                검색
-              </button>
-            </form>
             <Link className="home__primary-button" to="/edit">
               문서 작성
             </Link>
@@ -164,6 +150,7 @@ export default function Home() {
                 <div className="home__card" key={doc.id}>
                   <div className="home__card-main">
                     <div className="home__card-title">{doc.title}</div>
+                    <div className="home__card-badge">{doc.category}</div>
                     <div className="home__card-meta">
                       마지막 저장:{' '}
                       {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
@@ -207,6 +194,7 @@ export default function Home() {
                 <div className="home__card" key={`${doc.id}-popular`}>
                   <div className="home__card-main">
                     <div className="home__card-title">{doc.title}</div>
+                    <div className="home__card-badge">{doc.category}</div>
                     <div className="home__card-meta">
                       마지막 저장:{' '}
                       {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
