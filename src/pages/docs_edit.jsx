@@ -2,9 +2,13 @@ import { useMemo, useRef, useState } from 'react'
 import Editor from '../components/Editor'
 import './docs_edit.css'
 import { saveDocument } from '../services/documentService.js'
+import { useNavigate } from 'react-router-dom'
 
 const STORAGE_KEY = 'docs_edit_content_json'
 const META_KEY = 'docs_edit_meta'
+const HISTORY_KEY = 'docs_edit_history'
+const EDITOR_ID_KEY = 'docs_edit_editor_id'
+const DEFAULT_EDITOR_ID = 'guest'
 const CATEGORY_OPTIONS = [
 	{ value: 'jobs', label: '직업' },
 	{ value: 'items', label: '아이템' },
@@ -69,6 +73,45 @@ const DEFAULT_CONTENT = {
 	],
 }
 
+/**
+ * Resolve the editor identifier from local storage, falling back to a default ID.
+ *
+ * @returns {string}
+ * The editor ID to store in history entries.
+ * @example
+ * const editorId = resolveEditorId()
+ */
+const resolveEditorId = () => {
+	try {
+		const stored = localStorage.getItem(EDITOR_ID_KEY)
+		return stored?.trim() || DEFAULT_EDITOR_ID
+	} catch (error) {
+		console.warn('Failed to read editor id from local storage', error)
+		return DEFAULT_EDITOR_ID
+	}
+}
+
+/**
+ * Append a history entry to local storage so the history page can render it.
+ *
+ * @param {{ id: string, title: string, editorId: string, editedAt: string }} entry
+ * The history entry to record.
+ * @returns {void}
+ * This function updates local storage as a side effect.
+ * @example
+ * appendHistoryEntry({ id: '2025-01-01', title: '문서', editorId: 'guest', editedAt: '2025-01-01T00:00:00Z' })
+ */
+const appendHistoryEntry = (entry) => {
+	try {
+		const stored = localStorage.getItem(HISTORY_KEY)
+		const parsed = stored ? JSON.parse(stored) : []
+		const nextEntries = Array.isArray(parsed) ? [entry, ...parsed] : [entry]
+		localStorage.setItem(HISTORY_KEY, JSON.stringify(nextEntries))
+	} catch (error) {
+		console.warn('Failed to append history entry', error)
+	}
+}
+
 export default function DocsEdit() {
 	// Extract an initial title from the stored content (first H1) or fall back.
 	const initialTitle = useMemo(() => {
@@ -121,6 +164,8 @@ export default function DocsEdit() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [statusMessage, setStatusMessage] = useState('')
 	const currentJsonRef = useRef(initialContent)
+	// React Router 이동 함수: 저장 성공 후 문서 뷰 페이지로 전환하기 위해 사용합니다.
+	const navigate = useNavigate()
 
 	/**
 	 * Build a new JSON document that includes the current title as the first H1.
@@ -193,6 +238,15 @@ export default function DocsEdit() {
 			)
 			setLastSavedAt(savedAt)
 			setStatusMessage('문서를 저장했습니다.')
+			// 저장 이력을 history 페이지에서 사용할 수 있도록 로컬 스토리지에 누적합니다.
+			appendHistoryEntry({
+				id: result?.id ? String(result.id) : savedAt.toISOString(),
+				title: title?.trim() || '제목 1',
+				editorId: resolveEditorId(),
+				editedAt: savedAt.toISOString(),
+			})
+			// 저장 완료 후 즉시 읽기 전용 뷰로 이동하여, 방금 저장한 내용이 반영된 화면을 보여줍니다.
+			navigate('/view')
 		} catch (error) {
 			console.error('문서 저장 실패', error)
 			setStatusMessage('문서 저장에 실패했습니다. 다시 시도해 주세요.')
