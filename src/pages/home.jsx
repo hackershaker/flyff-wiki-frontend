@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import './home.css'
 import { getDocuments } from '../services/documentService.js'
 
+// Local storage keys shared with edit/view pages to keep a consistent document payload.
+const STORAGE_KEY = 'docs_edit_content_json'
+const META_KEY = 'docs_edit_meta'
+
 /**
  * Extract the first H1 heading from a document JSON to build a readable title.
  *
@@ -20,6 +24,44 @@ function extractTitle(doc) {
   )
   const titleText = headingNode?.content?.map((node) => node.text).join('').trim()
   return titleText || '문서'
+}
+
+/**
+ * Resolve the JSON document to store for the view page.
+ *
+ * - If the backend provided full TipTap JSON content, reuse it.
+ * - If only a title exists, build a minimal document so the view page can render.
+ *
+ * @param {unknown} rawDocument
+ * The raw document payload returned from the backend list API.
+ * @param {string} fallbackTitle
+ * The title to use when a full JSON document is not available.
+ * @returns {import('@tiptap/react').JSONContent}
+ * The JSON content that should be stored for the view page.
+ */
+function resolveViewContent(rawDocument, fallbackTitle) {
+  if (rawDocument?.content && rawDocument.content.type === 'doc') {
+    return rawDocument.content
+  }
+
+  if (rawDocument?.type === 'doc') {
+    return rawDocument
+  }
+
+  return {
+    type: 'doc',
+    content: [
+      {
+        type: 'heading',
+        attrs: { level: 1 },
+        content: [{ type: 'text', text: fallbackTitle || '문서' }],
+      },
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: '내용이 없습니다. /edit에서 문서를 작성해 주세요.' }],
+      },
+    ],
+  }
 }
 
 /**
@@ -83,15 +125,33 @@ export default function Home() {
         title,
         category,
         savedAt,
+        rawDocument: doc,
       }
     })
   }, [documents])
 
   // Temporary heuristics until popularity data is available from the backend.
   const recentDocs = useMemo(() => viewModels.slice(0, 6), [viewModels])
-  const popularDocs = useMemo(() => viewModels.slice(0, 6), [viewModels])
-
   const hasDoc = viewModels.length > 0
+
+  /**
+   * Persist the selected document in localStorage so the view page renders it.
+   *
+   * @param {typeof viewModels[number]} doc
+   * The view model containing the raw document payload and metadata.
+   * @returns {void}
+   * This function updates localStorage as a side effect for navigation.
+   */
+  const handleRecentDocClick = (doc) => {
+    const viewContent = resolveViewContent(doc.rawDocument, doc.title)
+    const updatedAt = doc.savedAt ? doc.savedAt.toISOString() : new Date().toISOString()
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(viewContent))
+    localStorage.setItem(
+      META_KEY,
+      JSON.stringify({ updatedAt, category: doc.category })
+    )
+  }
 
   return (
     <div className="home">
@@ -145,74 +205,21 @@ export default function Home() {
           )}
 
           {!isLoading && !errorMessage && hasDoc && (
-            <div className="home__list">
+            <div className="home__recent-list">
               {recentDocs.map((doc) => (
-                <div className="home__card" key={doc.id}>
-                  <div className="home__card-main">
-                    <div className="home__card-title">{doc.title}</div>
-                    <div className="home__card-badge">{doc.category}</div>
-                    <div className="home__card-meta">
-                      마지막 저장:{' '}
-                      {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
-                    </div>
-                  </div>
-                  <div className="home__card-actions">
-                    <Link className="home__link" to="/view">
-                      보기
-                    </Link>
-                    <Link className="home__link" to="/edit">
-                      편집
-                    </Link>
-                  </div>
-                </div>
+                <Link
+                  key={doc.id}
+                  className="home__recent-link"
+                  to="/view"
+                  onClick={() => handleRecentDocClick(doc)}
+                >
+                  {doc.title}
+                </Link>
               ))}
             </div>
           )}
         </section>
 
-        <section className="home__section card">
-          <div className="home__section-header">
-            <h2 className="home__section-title">인기 문서</h2>
-            <span className="home__section-count">
-              총 {isLoading ? 0 : viewModels.length}개
-            </span>
-          </div>
-
-          {isLoading && <div className="home__empty">문서 목록을 불러오는 중입니다.</div>}
-
-          {!isLoading && errorMessage && (
-            <div className="home__empty">{errorMessage}</div>
-          )}
-
-          {!isLoading && !errorMessage && !hasDoc && (
-            <div className="home__empty">저장된 문서가 없습니다.</div>
-          )}
-
-          {!isLoading && !errorMessage && hasDoc && (
-            <div className="home__list">
-              {popularDocs.map((doc) => (
-                <div className="home__card" key={`${doc.id}-popular`}>
-                  <div className="home__card-main">
-                    <div className="home__card-title">{doc.title}</div>
-                    <div className="home__card-badge">{doc.category}</div>
-                    <div className="home__card-meta">
-                      마지막 저장:{' '}
-                      {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
-                    </div>
-                  </div>
-                  <div className="home__card-actions">
-                    <Link className="home__link" to="/view">
-                      보기
-                    </Link>
-                    <Link className="home__link" to="/edit">
-                      편집
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   )
