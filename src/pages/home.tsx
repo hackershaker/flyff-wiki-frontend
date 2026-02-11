@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './home.css'
-import { getDocuments } from '../services/documentService.js'
+import { getDocuments } from '../services/documentService'
 
 // Local storage keys shared with edit/view pages to keep a consistent document payload.
 const STORAGE_KEY = 'docs_edit_content_json'
@@ -65,6 +65,24 @@ function resolveViewContent(rawDocument, fallbackTitle) {
 }
 
 /**
+ * Clear editor-related local storage to start a fresh document.
+ *
+ * - 인자: 없음.
+ * - 리턴값: void.
+ * - 사용 예시: `handleCreateDocClick()`에서 호출하여 새 문서 작성 모드로 전환합니다.
+ * - 동작 흐름: 콘텐츠/메타 키 삭제 -> 다음 편집 진입 시 기본값 사용.
+ * - 주의사항: 저장된 임시 편집 내용이 사라질 수 있으니 새 문서 작성 시에만 호출합니다.
+ */
+const resetEditorStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(META_KEY)
+  } catch (error) {
+    console.warn('Failed to reset editor storage', error)
+  }
+}
+
+/**
  * Home page with a clean, card-based layout for categories and document lists.
  *
  * @returns {JSX.Element} Home page UI.
@@ -120,8 +138,10 @@ export default function Home() {
       const title = doc?.title?.trim() || extractTitle(doc?.content ?? doc)
       const category = doc?.category ?? '미분류'
       const savedAt = doc?.savedAt ? new Date(doc.savedAt) : null
+      // Resolve a stable document identifier for history filtering and navigation.
+      const resolvedId = doc?.id ?? doc?.savedAt ?? `doc-${index}`
       return {
-        id: doc?.id ?? doc?.savedAt ?? `doc-${index}`,
+        id: String(resolvedId),
         title,
         category,
         savedAt,
@@ -135,12 +155,25 @@ export default function Home() {
   const hasDoc = viewModels.length > 0
 
   /**
+   * Prepare a brand-new document by clearing stored editor data.
+   *
+   * - 인자: 없음.
+   * - 리턴값: void.
+   * - 사용 예시: "문서 작성" 버튼 클릭 시 호출합니다.
+   * - 동작 흐름: 로컬 스토리지 초기화 -> 편집 화면에서 새 문서로 시작.
+   */
+  const handleCreateDocClick = () => {
+    resetEditorStorage()
+  }
+
+  /**
    * Persist the selected document in localStorage so the view page renders it.
    *
    * @param {typeof viewModels[number]} doc
    * The view model containing the raw document payload and metadata.
    * @returns {void}
    * This function updates localStorage as a side effect for navigation.
+   * - 참고사항: documentId를 저장하여 변경 이력 페이지에서 문서별로 필터링합니다.
    */
   const handleRecentDocClick = (doc) => {
     const viewContent = resolveViewContent(doc.rawDocument, doc.title)
@@ -149,7 +182,11 @@ export default function Home() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(viewContent))
     localStorage.setItem(
       META_KEY,
-      JSON.stringify({ updatedAt, category: doc.category })
+      JSON.stringify({
+        updatedAt,
+        category: doc.category,
+        documentId: doc.id,
+      })
     )
   }
 
@@ -165,9 +202,19 @@ export default function Home() {
             </p>
           </div>
           <div className="home__hero-actions">
-            <Link className="home__primary-button" to="/edit">
+            <Link
+              className="home__primary-button"
+              to="/edit"
+              onClick={handleCreateDocClick}
+            >
               문서 작성
             </Link>
+            <div className="home__hero-count">
+              <span className="home__hero-count-label">저장된 문서</span>
+              <span className="home__hero-count-value">
+                {isLoading ? 0 : viewModels.length}개
+              </span>
+            </div>
           </div>
         </section>
 

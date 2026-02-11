@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { http } from 'msw'
 
-import { server } from '../mocks/node.js'
+import { server } from '../mocks/node'
 
 describe('MSW: 문서 저장 API 동작', () => {
   // 이 테스트는 네트워크 요청을 실제 서버로 보내지 않고,
@@ -40,7 +40,7 @@ describe('MSW: 문서 저장 API 동작', () => {
       }),
     )
 
-    const { saveDocument } = await import('./documentService.js')
+    const { saveDocument } = await import('./documentService')
     const payload = { content: { type: 'doc', content: [] } }
 
     const result = await saveDocument(payload)

@@ -2,26 +2,56 @@ import { useMemo } from 'react'
 import './history.css'
 
 const HISTORY_KEY = 'docs_edit_history'
+const META_KEY = 'docs_edit_meta'
 
 /**
  * Load and normalize history entries from local storage.
  *
- * @returns {Array<{ id: string, title: string, editorId: string, editedAt: string }>}
- * The history entries sorted by most recent first.
+ * @param {string} documentId
+ * The current document identifier used to filter history entries.
+ * @returns {Array<{ id: string, title: string, editorId: string, editedAt: string, documentId: string }>}
+ * The history entries filtered by document and sorted by most recent first.
  * @example
- * const entries = loadHistoryEntries()
+ * const entries = loadHistoryEntries('doc-123')
  */
-const loadHistoryEntries = () => {
+const loadHistoryEntries = (documentId) => {
   try {
     const stored = localStorage.getItem(HISTORY_KEY)
     const parsed = stored ? JSON.parse(stored) : []
     if (!Array.isArray(parsed)) {
       return []
     }
-    return parsed
+    if (!documentId) {
+      return []
+    }
+    return parsed.filter(
+      (entry) => String(entry?.documentId ?? '') === String(documentId)
+    )
   } catch (error) {
     console.warn('Failed to load history entries', error)
     return []
+  }
+}
+
+/**
+ * Resolve the current document id from stored editor metadata.
+ *
+ * @returns {string}
+ * The current document id or an empty string when not available.
+ * @example
+ * const documentId = resolveCurrentDocumentId()
+ */
+const resolveCurrentDocumentId = () => {
+  try {
+    const metaRaw = localStorage.getItem(META_KEY)
+    if (!metaRaw) {
+      return ''
+    }
+    const meta = JSON.parse(metaRaw)
+    return meta?.documentId ? String(meta.documentId) : ''
+  } catch (error) {
+    console.warn('Failed to parse stored meta for history', error)
+    return ''
   }
 }
 
@@ -52,7 +82,9 @@ const formatEditedAt = (editedAt) => {
  * @returns {JSX.Element} The history page layout.
  */
 export default function History() {
-  const historyItems = useMemo(() => loadHistoryEntries(), [])
+  const documentId = useMemo(() => resolveCurrentDocumentId(), [])
+  const historyItems = useMemo(() => loadHistoryEntries(documentId), [documentId])
+  const hasDocument = Boolean(documentId)
   const hasHistory = historyItems.length > 0
 
   return (
@@ -68,11 +100,17 @@ export default function History() {
             <span className="history__count">총 {historyItems.length}건</span>
           </div>
 
-          {!hasHistory && (
+          {!hasDocument && (
+            <div className="history__empty">
+              문서를 선택한 뒤 변경 이력으로 이동해 주세요.
+            </div>
+          )}
+
+          {hasDocument && !hasHistory && (
             <div className="history__empty">변경 이력이 없습니다.</div>
           )}
 
-          {hasHistory && (
+          {hasDocument && hasHistory && (
             <div className="history__table">
               <div className="history__row history__row--head">
                 <span className="history__cell">문서 제목</span>

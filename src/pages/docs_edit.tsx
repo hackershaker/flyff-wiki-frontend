@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import Editor from '../components/Editor'
 import './docs_edit.css'
-import { saveDocument } from '../services/documentService.js'
+import { saveDocument } from '../services/documentService'
 import { useNavigate } from 'react-router-dom'
 
 const STORAGE_KEY = 'docs_edit_content_json'
@@ -94,12 +94,18 @@ const resolveEditorId = () => {
 /**
  * Append a history entry to local storage so the history page can render it.
  *
- * @param {{ id: string, title: string, editorId: string, editedAt: string }} entry
+ * @param {{ id: string, title: string, editorId: string, editedAt: string, documentId: string }} entry
  * The history entry to record.
  * @returns {void}
  * This function updates local storage as a side effect.
  * @example
- * appendHistoryEntry({ id: '2025-01-01', title: '문서', editorId: 'guest', editedAt: '2025-01-01T00:00:00Z' })
+ * appendHistoryEntry({
+ *   id: '2025-01-01',
+ *   title: '문서',
+ *   editorId: 'guest',
+ *   editedAt: '2025-01-01T00:00:00Z',
+ *   documentId: 'doc-123',
+ * })
  */
 const appendHistoryEntry = (entry) => {
 	try {
@@ -112,54 +118,95 @@ const appendHistoryEntry = (entry) => {
 	}
 }
 
+/**
+ * Split a stored document JSON into a title and editor-ready content.
+ *
+ * - 인자: TipTap JSON 문서(`doc`) 혹은 `null`.
+ * - 리턴값: `{ title, content }` 형태의 객체.
+ * - 사용 예시: `const { title, content } = splitTitleFromDocument(storedDoc)`.
+ * - 동작 흐름: H1 탐색 -> 제목 추출 -> H1 제거 -> 결과 반환.
+ * - 주의사항: H1이 없으면 제목은 기본값(제목 1)으로 처리됩니다.
+ * - 참고사항: 편집 화면에서는 제목 입력을 별도로 사용하므로 H1을 제거합니다.
+ */
+const splitTitleFromDocument = (doc) => {
+	const fallbackTitle = '제목 1'
+
+	if (!doc || !Array.isArray(doc.content)) {
+		return { title: fallbackTitle, content: DEFAULT_CONTENT }
+	}
+
+	const headingIndex = doc.content.findIndex(
+		(node) => node.type === 'heading' && node.attrs?.level === 1
+	)
+
+	if (headingIndex === -1) {
+		return { title: fallbackTitle, content: doc }
+	}
+
+	const headingNode = doc.content[headingIndex]
+	const titleText = headingNode?.content?.map((node) => node.text).join('').trim()
+
+	return {
+		title: titleText || fallbackTitle,
+		content: {
+			...doc,
+			content: [
+				...doc.content.slice(0, headingIndex),
+				...doc.content.slice(headingIndex + 1),
+			],
+		},
+	}
+}
+
+/**
+ * Load the stored meta (category/documentId) for the editor.
+ *
+ * - 인자: 없음.
+ * - 리턴값: `{ category, documentId }` 형태의 메타 데이터.
+ * - 사용 예시: `const { category, documentId } = loadEditorMeta()`.
+ * - 동작 흐름: 로컬 스토리지 읽기 -> JSON 파싱 -> 기본값 적용.
+ * - 주의사항: 파싱 오류 시 기본값으로 대체됩니다.
+ */
+const loadEditorMeta = () => {
+	const fallbackCategory = CATEGORY_OPTIONS[0]?.value ?? 'jobs'
+	try {
+		const metaRaw = localStorage.getItem(META_KEY)
+		if (!metaRaw) {
+			return { category: fallbackCategory, documentId: '' }
+		}
+		const meta = JSON.parse(metaRaw)
+		return {
+			category: meta?.category ?? fallbackCategory,
+			documentId: meta?.documentId ? String(meta.documentId) : '',
+		}
+	} catch (error) {
+		console.warn('Failed to parse stored meta', error)
+		return { category: fallbackCategory, documentId: '' }
+	}
+}
+
 export default function DocsEdit() {
-	// Extract an initial title from the stored content (first H1) or fall back.
-	const initialTitle = useMemo(() => {
+	// Extract the initial title and content by removing the first H1 from stored JSON.
+	const initialDocument = useMemo(() => {
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY)
 			if (!stored) {
-				return '제목 1'
+				return splitTitleFromDocument(null)
 			}
 			const doc = JSON.parse(stored)
-			if (!doc || !Array.isArray(doc.content)) {
-				return '제목 1'
-			}
-			const headingNode = doc.content.find(
-				(node) => node.type === 'heading' && node.attrs?.level === 1
-			)
-			const titleText = headingNode?.content?.map((node) => node.text).join('').trim()
-			return titleText || '제목 1'
+			return splitTitleFromDocument(doc)
 		} catch (error) {
 			console.warn('Failed to parse title from stored content', error)
-			return '제목 1'
+			return splitTitleFromDocument(null)
 		}
 	}, [])
 
-	const [initialContent] = useState(() => {
-		try {
-			const stored = localStorage.getItem(STORAGE_KEY)
-			if (stored) {
-				return JSON.parse(stored)
-			}
-		} catch (error) {
-			console.warn('Failed to load saved content JSON', error)
-		}
-		return DEFAULT_CONTENT
-	})
-	const [title, setTitle] = useState(initialTitle)
-	const [category, setCategory] = useState(() => {
-		try {
-			const metaRaw = localStorage.getItem(META_KEY)
-			if (!metaRaw) {
-				return CATEGORY_OPTIONS[0]?.value ?? 'jobs'
-			}
-			const meta = JSON.parse(metaRaw)
-			return meta?.category ?? CATEGORY_OPTIONS[0]?.value ?? 'jobs'
-		} catch (error) {
-			console.warn('Failed to parse stored category', error)
-			return CATEGORY_OPTIONS[0]?.value ?? 'jobs'
-		}
-	})
+	const [initialContent] = useState(initialDocument.content)
+	const [title, setTitle] = useState(initialDocument.title)
+	// Load category/documentId from local storage to keep edits scoped per document.
+	const initialMeta = useMemo(() => loadEditorMeta(), [])
+	const [category, setCategory] = useState(initialMeta.category)
+	const [documentId, setDocumentId] = useState(initialMeta.documentId)
 	const [lastSavedAt, setLastSavedAt] = useState(null)
 	const [isSaving, setIsSaving] = useState(false)
 	const [statusMessage, setStatusMessage] = useState('')
@@ -223,6 +270,8 @@ export default function DocsEdit() {
 		try {
 			const contentWithTitle = applyTitleToDocument(currentJsonRef.current, title)
 			const payload = {
+				// Include document id to allow backend/MSW to update instead of creating duplicates.
+				id: documentId || undefined,
 				// Send the explicit title field to the backend for list views and indexing.
 				title: title?.trim() || '제목 1',
 				// Send the selected category for filtering and list views.
@@ -230,20 +279,33 @@ export default function DocsEdit() {
 				content: contentWithTitle,
 			}
 			const result = await saveDocument(payload)
+			// Prefer backend id when available; otherwise reuse existing document id for stable history.
+			const nextDocumentId =
+				(result?.id !== undefined && result?.id !== null
+					? String(result.id)
+					: documentId) ||
+				(result?.savedAt ? String(result.savedAt) : new Date().toISOString())
 			const savedAt = result?.savedAt ? new Date(result.savedAt) : new Date()
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(contentWithTitle))
 			localStorage.setItem(
 				META_KEY,
-				JSON.stringify({ updatedAt: savedAt.toISOString(), category })
+				JSON.stringify({
+					updatedAt: savedAt.toISOString(),
+					category,
+					documentId: nextDocumentId,
+				})
 			)
+			setDocumentId(nextDocumentId)
 			setLastSavedAt(savedAt)
 			setStatusMessage('문서를 저장했습니다.')
 			// 저장 이력을 history 페이지에서 사용할 수 있도록 로컬 스토리지에 누적합니다.
+			// 첫 저장(신규 생성)도 "최초 생성" 이력으로 기록합니다.
 			appendHistoryEntry({
 				id: result?.id ? String(result.id) : savedAt.toISOString(),
 				title: title?.trim() || '제목 1',
 				editorId: resolveEditorId(),
 				editedAt: savedAt.toISOString(),
+				documentId: nextDocumentId,
 			})
 			// 저장 완료 후 즉시 읽기 전용 뷰로 이동하여, 방금 저장한 내용이 반영된 화면을 보여줍니다.
 			navigate('/view')

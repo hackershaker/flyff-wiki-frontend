@@ -1,5 +1,5 @@
 ﻿import { BadgeAlert } from 'lucide-react'
-import { ICON_COMPONENTS } from '../config/toolbarConfig.js'
+import { ICON_COMPONENTS } from '../config/toolbarConfig'
 import './ToolbarButton.css'
 
 const SIZE_CLASS_MAP = {
@@ -23,7 +23,7 @@ const SHAPE_CLASS_MAP = {
  * `<ToolbarButton icon="bold" tooltip="굵게" active={isBold} onClick={onBold} />`
  *
  * @param {Object} props
- * @param {keyof typeof import('../config/toolbarConfig.js').ICON_COMPONENTS} props.icon
+ * @param {keyof typeof import('../config/toolbarConfig').ICON_COMPONENTS} props.icon
  * 렌더링할 아이콘 키. 없으면 children을 우선 사용하고, 없으면 경고 아이콘을 표시합니다.
  * @param {'node' | 'marks'} [props.iconType='marks']
  * 아이콘 스타일 분류. 아이콘 색상/크기에 활용됩니다.

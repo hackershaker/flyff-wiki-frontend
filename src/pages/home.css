@@ -49,7 +49,9 @@
 
 .home__hero-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
   min-width: 200px;
 }
 
@@ -68,6 +70,31 @@
 
 .home__primary-button:hover {
   background: var(--color-accent);
+}
+
+/* Hero stats give a quick glance at the total number of saved documents. */
+.home__hero-count {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  min-width: 140px;
+}
+
+.home__hero-count-label {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.home__hero-count-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-accent-strong);
 }
 
 /* Section cards keep a unified page rhythm across the home layout. */
@@ -221,6 +248,7 @@
 
   .home__hero-actions {
     width: 100%;
+    align-items: flex-start;
   }
 }
 
