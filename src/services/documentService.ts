@@ -9,8 +9,9 @@
  * - Notes: when empty, requests are sent to the same origin (useful for MSW or proxy).
  */
 const VITE_API_BASE = import.meta.env.VITE_API_BASE ?? ''
+const USE_MSW = (import.meta.env.VITE_ENABLE_MSW ?? 'false').toString().trim().toLowerCase() === 'true'
 const API_BASE = VITE_API_BASE.replace(/\/+$/, '')
-const endpoint = API_BASE ? `${API_BASE}/api/documents` : '/api/documents'
+const endpoint = USE_MSW ? '/api/documents' : API_BASE ? `${API_BASE}/api/documents` : '/api/documents'
 
 export async function getDocuments() {
   const response = await fetch(endpoint, {
