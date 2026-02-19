@@ -82,11 +82,13 @@ async function enableMocking() {
    * - Caution: MSW is intentionally disabled in production builds.
    */
   if (!import.meta.env.DEV || !IS_MSW_ENABLED) {
+    console.info('MSW disabled (DEV mode:', import.meta.env.DEV, 'VITE_ENABLE_MSW:', import.meta.env.VITE_ENABLE_MSW, ')')
     return
   }
 
   const { worker } = await import('./mocks/browser')
 
+  console.info('MSW worker starting (DEV server id:', typeof __DEV_SERVER_ID__ !== 'undefined' ? __DEV_SERVER_ID__ : 'n/a', ')')
   return worker.start({
     onUnhandledRequest: 'bypass',
   })
