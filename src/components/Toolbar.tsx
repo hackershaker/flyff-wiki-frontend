@@ -76,7 +76,7 @@ export default function Toolbar({ editor, editorState }) {
       <ToolbarGroup>
         {tableOptions.map(({ icon, action, stateKey, text }) => (
           <ToolbarButton
-            key={stateKey + icon}
+            key={`${stateKey}-${icon}-${text}`}
             icon={icon}
             iconType="node"
             active={Boolean(editorState?.[stateKey])}
@@ -90,7 +90,7 @@ export default function Toolbar({ editor, editorState }) {
       <ToolbarGroup>
         {alignmentOptions.map(({ icon, action, stateKey, text }) => (
           <ToolbarButton
-            key={stateKey + icon}
+            key={`${stateKey}-${icon}-${text}`}
             icon={icon}
             iconType="node"
             active={Boolean(editorState?.[stateKey])}
@@ -104,7 +104,7 @@ export default function Toolbar({ editor, editorState }) {
       <ToolbarGroup>
         {mediaOptions.map(({ icon, action, stateKey, text }) => (
           <ToolbarButton
-            key={`${stateKey}-${icon}`}
+            key={`${stateKey}-${icon}-${text}`}
             icon={icon}
             iconType="node"
             active={Boolean(editorState?.[stateKey])}
@@ -118,7 +118,7 @@ export default function Toolbar({ editor, editorState }) {
       <ToolbarGroup>
         {blockOptions.map(({ icon, action, stateKey, text }) => (
           <ToolbarButton
-            key={stateKey + icon}
+            key={`${stateKey}-${icon}-${text}`}
             icon={icon}
             iconType="node"
             active={Boolean(editorState?.[stateKey])}

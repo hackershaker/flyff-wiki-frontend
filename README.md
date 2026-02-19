@@ -99,6 +99,12 @@ Canonical - markdown 포맷으로 고정
        ```
 - 참고: 추가로 CPU가 높다면 `onUpdate`를 디바운스(200~300ms)하거나 확장/히스토리 옵션을 최소화하는 방식으로 추가 최적화 가능.
 
+### `/edit`에서 React 경고 “같은 key” 반복
+- 증상: 개발자 도구 콘솔에 `Encountered two children with the same key, isInTabletableColumnsSplit` 같은 경고가 반복 출력됩니다. 페이지 렌더링에는 영향이 적을 수 있지만, React가 내부 상태를 헷갈려 UI가 깜박이거나 일부 버튼이 빠질 수 있습니다.
+- 원인: 툴바(`src/components/Toolbar.tsx`)에서 표/정렬/블록/미디어 버튼을 렌더링할 때 `key={stateKey + icon}`으로 고정해 두었는데, `tableColumnsSplit`처럼 같은 `stateKey`/`icon` 조합이 여러 버튼에서 반복되어 키가 완전히 겹칩니다. React는 키로 요소를 구분하기 때문에 중복 키가 있으면 “children duplicated/omitted” 경고를 기록합니다.
+- 해결: 렌더링 키를 더 고유하게 만들어 중복을 제거합니다. 예) `key={`${stateKey}-${icon}-${text}`}`처럼 세 필드 조합으로 구성하거나 `map`의 인덱스를 추가합니다. 현재 코드에서는 `src/components/Toolbar.tsx`의 `tableOptions`, `alignmentOptions`, `mediaOptions`, `blockOptions` 반복 렌더링 부분을 모두 수정해 키 중복이 생기지 않도록 했습니다. (수정된 키는 `stateKey`, `icon`, `text` 조합으로 고유화했습니다.)
+- 초보자 팁: 콘솔 경고를 무시하지 말고 오류 메시지에 나온 `key` 값을 복사해 파일 전체를 검색하면 문제가 있는 반복 위치를 빠르게 찾을 수 있습니다.
+
 ### msw 페이지 이동 시 리로드
 - 저장된 문서가 홈 화면으로 이동 시 메모리가 초기화 되는 문제점
 - react router 도입으로 데이터 유지하기로 결정
