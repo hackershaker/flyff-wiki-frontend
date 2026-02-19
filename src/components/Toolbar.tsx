@@ -6,10 +6,10 @@ import {
   markOptions,
   mediaOptions,
   tableOptions,
-} from '../config/toolbarConfig.js'
-import ToolbarButton from './ToolbarButton.jsx'
-import ToolbarGroup from './ToolbarGroup.jsx'
-import ToolbarLine from './ToolbarLine.jsx'
+} from '../config/toolbarConfig'
+import ToolbarButton from './ToolbarButton'
+import ToolbarGroup from './ToolbarGroup'
+import ToolbarLine from './ToolbarLine'
 
 /**
  * 에디터 툴바 컴포넌트.

@@ -6,7 +6,7 @@ import Image from '@tiptap/extension-image'
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import { useEffect, useState } from 'react'
 import './Editor.css'
-import Toolbar from './Toolbar.jsx'
+import Toolbar from './Toolbar'
 
 /**
  * 위키 문서 편집기 컴포넌트.

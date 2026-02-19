@@ -36,11 +36,51 @@
   color: var(--color-accent-strong);
 }
 
-.docs-view__title {
+/* Title row aligns the document title with action buttons on the right. */
+.docs-view__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin: 12px 0 4px;
+}
+
+.docs-view__title {
+  margin: 0;
   font-size: 28px;
   line-height: 1.25;
   color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Header actions provide quick access to edit and history views. */
+.docs-view__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Shared button styling for header actions for consistent emphasis. */
+.docs-view__action {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.docs-view__action--primary {
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+  color: var(--color-accent-contrast);
+}
+
+.docs-view__action:hover {
+  border-color: var(--color-accent);
 }
 
 .docs-view__desc {
@@ -165,5 +205,15 @@
 
   .docs-view__title {
     font-size: 22px;
+  }
+
+  .docs-view__title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .docs-view__actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }

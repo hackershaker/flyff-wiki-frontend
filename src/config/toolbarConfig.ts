@@ -1,6 +1,6 @@
 /**
  * 에디터 툴바에서 사용하는 아이콘/옵션 구성 모음.
- * 각 옵션 배열은 Toolbar.jsx에서 그룹으로 렌더링됩니다.
+ * 각 옵션 배열은 Toolbar.tsx에서 그룹으로 렌더링됩니다.
  */
 import {
   AlignLeft,
@@ -32,10 +32,10 @@ import {
 
 /**
  * 에디터의 활성 상태 키 목록.
- * Editor.jsx의 `activeFormats`와 1:1로 대응됩니다.
+ * Editor.tsx의 `activeFormats`와 1:1로 대응됩니다.
  *
  * 추가 방법:
- * 1) Editor.jsx에서 editor.isActive(...)로 상태를 계산
+ * 1) Editor.tsx에서 editor.isActive(...)로 상태를 계산
  * 2) 해당 키를 이 타입에 추가
  * 3) 옵션 배열의 stateKey에 동일한 값을 지정
  *
@@ -55,7 +55,7 @@ import {
  * 필수 필드:
  * - icon: 아이콘 키 (ICON_COMPONENTS의 키)
  * - action: 클릭 시 실행되는 TipTap 명령
- * - stateKey: 활성 상태 키 (Editor.jsx에서 계산되는 값)
+ * - stateKey: 활성 상태 키 (Editor.tsx에서 계산되는 값)
  * - text: 버튼 툴팁/aria-label 텍스트
  *
  * @typedef {Object} ToolbarConfig
@@ -294,7 +294,7 @@ export const blockOptions = [
  * 정렬(TextAlign) 옵션.
  *
  * 주의:
- * - TextAlign extension의 types 설정을 Editor.jsx에서 관리합니다.
+ * - TextAlign extension의 types 설정을 Editor.tsx에서 관리합니다.
  *
  * @type {ToolbarConfig[]}
  */

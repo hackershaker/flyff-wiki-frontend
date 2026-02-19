@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './home.css'
-import { getDocuments } from '../services/documentService.js'
+import { getDocuments } from '../services/documentService'
+
+// Local storage keys shared with edit/view pages to keep a consistent document payload.
+const STORAGE_KEY = 'docs_edit_content_json'
+const META_KEY = 'docs_edit_meta'
 
 /**
  * Extract the first H1 heading from a document JSON to build a readable title.
@@ -20,6 +24,62 @@ function extractTitle(doc) {
   )
   const titleText = headingNode?.content?.map((node) => node.text).join('').trim()
   return titleText || '문서'
+}
+
+/**
+ * Resolve the JSON document to store for the view page.
+ *
+ * - If the backend provided full TipTap JSON content, reuse it.
+ * - If only a title exists, build a minimal document so the view page can render.
+ *
+ * @param {unknown} rawDocument
+ * The raw document payload returned from the backend list API.
+ * @param {string} fallbackTitle
+ * The title to use when a full JSON document is not available.
+ * @returns {import('@tiptap/react').JSONContent}
+ * The JSON content that should be stored for the view page.
+ */
+function resolveViewContent(rawDocument, fallbackTitle) {
+  if (rawDocument?.content && rawDocument.content.type === 'doc') {
+    return rawDocument.content
+  }
+
+  if (rawDocument?.type === 'doc') {
+    return rawDocument
+  }
+
+  return {
+    type: 'doc',
+    content: [
+      {
+        type: 'heading',
+        attrs: { level: 1 },
+        content: [{ type: 'text', text: fallbackTitle || '문서' }],
+      },
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: '내용이 없습니다. /edit에서 문서를 작성해 주세요.' }],
+      },
+    ],
+  }
+}
+
+/**
+ * Clear editor-related local storage to start a fresh document.
+ *
+ * - 인자: 없음.
+ * - 리턴값: void.
+ * - 사용 예시: `handleCreateDocClick()`에서 호출하여 새 문서 작성 모드로 전환합니다.
+ * - 동작 흐름: 콘텐츠/메타 키 삭제 -> 다음 편집 진입 시 기본값 사용.
+ * - 주의사항: 저장된 임시 편집 내용이 사라질 수 있으니 새 문서 작성 시에만 호출합니다.
+ */
+const resetEditorStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(META_KEY)
+  } catch (error) {
+    console.warn('Failed to reset editor storage', error)
+  }
 }
 
 /**
@@ -78,20 +138,57 @@ export default function Home() {
       const title = doc?.title?.trim() || extractTitle(doc?.content ?? doc)
       const category = doc?.category ?? '미분류'
       const savedAt = doc?.savedAt ? new Date(doc.savedAt) : null
+      // Resolve a stable document identifier for history filtering and navigation.
+      const resolvedId = doc?.id ?? doc?.savedAt ?? `doc-${index}`
       return {
-        id: doc?.id ?? doc?.savedAt ?? `doc-${index}`,
+        id: String(resolvedId),
         title,
         category,
         savedAt,
+        rawDocument: doc,
       }
     })
   }, [documents])
 
   // Temporary heuristics until popularity data is available from the backend.
   const recentDocs = useMemo(() => viewModels.slice(0, 6), [viewModels])
-  const popularDocs = useMemo(() => viewModels.slice(0, 6), [viewModels])
-
   const hasDoc = viewModels.length > 0
+
+  /**
+   * Prepare a brand-new document by clearing stored editor data.
+   *
+   * - 인자: 없음.
+   * - 리턴값: void.
+   * - 사용 예시: "문서 작성" 버튼 클릭 시 호출합니다.
+   * - 동작 흐름: 로컬 스토리지 초기화 -> 편집 화면에서 새 문서로 시작.
+   */
+  const handleCreateDocClick = () => {
+    resetEditorStorage()
+  }
+
+  /**
+   * Persist the selected document in localStorage so the view page renders it.
+   *
+   * @param {typeof viewModels[number]} doc
+   * The view model containing the raw document payload and metadata.
+   * @returns {void}
+   * This function updates localStorage as a side effect for navigation.
+   * - 참고사항: documentId를 저장하여 변경 이력 페이지에서 문서별로 필터링합니다.
+   */
+  const handleRecentDocClick = (doc) => {
+    const viewContent = resolveViewContent(doc.rawDocument, doc.title)
+    const updatedAt = doc.savedAt ? doc.savedAt.toISOString() : new Date().toISOString()
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(viewContent))
+    localStorage.setItem(
+      META_KEY,
+      JSON.stringify({
+        updatedAt,
+        category: doc.category,
+        documentId: doc.id,
+      })
+    )
+  }
 
   return (
     <div className="home">
@@ -105,9 +202,19 @@ export default function Home() {
             </p>
           </div>
           <div className="home__hero-actions">
-            <Link className="home__primary-button" to="/edit">
+            <Link
+              className="home__primary-button"
+              to="/edit"
+              onClick={handleCreateDocClick}
+            >
               문서 작성
             </Link>
+            <div className="home__hero-count">
+              <span className="home__hero-count-label">저장된 문서</span>
+              <span className="home__hero-count-value">
+                {isLoading ? 0 : viewModels.length}개
+              </span>
+            </div>
           </div>
         </section>
 
@@ -145,74 +252,21 @@ export default function Home() {
           )}
 
           {!isLoading && !errorMessage && hasDoc && (
-            <div className="home__list">
+            <div className="home__recent-list">
               {recentDocs.map((doc) => (
-                <div className="home__card" key={doc.id}>
-                  <div className="home__card-main">
-                    <div className="home__card-title">{doc.title}</div>
-                    <div className="home__card-badge">{doc.category}</div>
-                    <div className="home__card-meta">
-                      마지막 저장:{' '}
-                      {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
-                    </div>
-                  </div>
-                  <div className="home__card-actions">
-                    <Link className="home__link" to="/view">
-                      보기
-                    </Link>
-                    <Link className="home__link" to="/edit">
-                      편집
-                    </Link>
-                  </div>
-                </div>
+                <Link
+                  key={doc.id}
+                  className="home__recent-link"
+                  to="/view"
+                  onClick={() => handleRecentDocClick(doc)}
+                >
+                  {doc.title}
+                </Link>
               ))}
             </div>
           )}
         </section>
 
-        <section className="home__section card">
-          <div className="home__section-header">
-            <h2 className="home__section-title">인기 문서</h2>
-            <span className="home__section-count">
-              총 {isLoading ? 0 : viewModels.length}개
-            </span>
-          </div>
-
-          {isLoading && <div className="home__empty">문서 목록을 불러오는 중입니다.</div>}
-
-          {!isLoading && errorMessage && (
-            <div className="home__empty">{errorMessage}</div>
-          )}
-
-          {!isLoading && !errorMessage && !hasDoc && (
-            <div className="home__empty">저장된 문서가 없습니다.</div>
-          )}
-
-          {!isLoading && !errorMessage && hasDoc && (
-            <div className="home__list">
-              {popularDocs.map((doc) => (
-                <div className="home__card" key={`${doc.id}-popular`}>
-                  <div className="home__card-main">
-                    <div className="home__card-title">{doc.title}</div>
-                    <div className="home__card-badge">{doc.category}</div>
-                    <div className="home__card-meta">
-                      마지막 저장:{' '}
-                      {doc.savedAt ? doc.savedAt.toLocaleString('ko-KR') : '기록 없음'}
-                    </div>
-                  </div>
-                  <div className="home__card-actions">
-                    <Link className="home__link" to="/view">
-                      보기
-                    </Link>
-                    <Link className="home__link" to="/edit">
-                      편집
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   )

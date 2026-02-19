@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import ToolbarButton from './ToolbarButton.jsx'
+import { describe, expect, it } from 'vitest'
+import ToolbarButton from './ToolbarButton'
 
 describe('ToolbarButton', () => {
   it('applies active class and tooltip', () => {

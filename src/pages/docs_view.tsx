@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import './docs_view.css'
@@ -46,6 +47,8 @@ function extractTitleAndContent(doc) {
 }
 
 export default function DocsView() {
+	// React Router navigation helper used by header action buttons.
+	const navigate = useNavigate()
 	const { content, title } = useMemo(() => {
 		let doc = DEFAULT_CONTENT
 		try {
@@ -58,6 +61,30 @@ export default function DocsView() {
 		}
 		return extractTitleAndContent(doc)
 	}, [])
+
+	/**
+	 * Move the user to the edit screen so they can update the current document.
+	 *
+	 * @returns {void}
+	 * This handler performs navigation as a side effect.
+	 * @example
+	 * <button onClick={handleEditClick}>편집</button>
+	 */
+	const handleEditClick = () => {
+		navigate('/edit')
+	}
+
+	/**
+	 * Move the user to the change-history screen for this document.
+	 *
+	 * @returns {void}
+	 * This handler performs navigation as a side effect.
+	 * @example
+	 * <button onClick={handleHistoryClick}>변경 이력</button>
+	 */
+	const handleHistoryClick = () => {
+		navigate('/history')
+	}
 
 	const editor = useEditor({
 		extensions: [StarterKit],
@@ -75,7 +102,25 @@ export default function DocsView() {
 			<div className="docs-view__container">
 				<div className="docs-view__header">
 					<span className="docs-view__badge">Flyff Wiki</span>
-					<h1 className="docs-view__title">{title}</h1>
+					<div className="docs-view__title-row">
+						<h1 className="docs-view__title">{title}</h1>
+						<div className="docs-view__actions">
+							<button
+								type="button"
+								className="docs-view__action docs-view__action--primary"
+								onClick={handleEditClick}
+							>
+								편집
+							</button>
+							<button
+								type="button"
+								className="docs-view__action"
+								onClick={handleHistoryClick}
+							>
+								변경 이력
+							</button>
+						</div>
+					</div>
 					<p className="docs-view__desc">읽기 전용 화면입니다.</p>
 				</div>
 				<EditorContent editor={editor} />

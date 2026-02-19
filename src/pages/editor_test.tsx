@@ -1,8 +1,8 @@
-import Editor from '../components/Editor.jsx'
-import ToolbarButton from '../components/ToolbarButton.jsx'
-import ToolbarGroup from '../components/ToolbarGroup.jsx'
-import ToolbarLine from '../components/ToolbarLine.jsx'
-import { headingOptions, markOptions } from '../config/toolbarConfig.js'
+import Editor from '../components/Editor'
+import ToolbarButton from '../components/ToolbarButton'
+import ToolbarGroup from '../components/ToolbarGroup'
+import ToolbarLine from '../components/ToolbarLine'
+import { headingOptions, markOptions } from '../config/toolbarConfig'
 
 const demoHeadingOptions = headingOptions.slice(0, 3)
 
